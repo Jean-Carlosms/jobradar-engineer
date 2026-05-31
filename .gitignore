@@ -1,0 +1,12 @@
+.env
+.venv/
+logs/
+__pycache__/
+.pytest_cache/
+*.pyc
+data/jobs.db
+data/*.db
+!data/sample_jobs.db
+!data/.gitkeep
+data/*.sqlite
+data/*.sqlite3

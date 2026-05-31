@@ -1,0 +1,9 @@
+APScheduler>=3.10
+beautifulsoup4>=4.12
+python-dotenv>=1.0
+requests>=2.31
+SQLAlchemy>=2.0
+pytest>=8.0
+PyYAML>=6.0
+pandas>=2.2
+streamlit>=1.36

@@ -3,6 +3,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_SCREENSHOT_IMAGES = [
+    "dashboard-overview.png",
+    "job-funnel.png",
+    "top-jobs.png",
+    "job-profile-analysis.png",
+    "human-review.png",
+    "prefilter-audit.png",
+    "feedback-insights.png",
+]
 
 
 def test_phase6_documentation_files_exist():
@@ -99,21 +108,26 @@ def test_visual_demo_docs_reference_expected_screenshots():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     screenshots_guide = (ROOT / "docs" / "SCREENSHOTS_GUIDE.md").read_text(encoding="utf-8")
     demo_script = (ROOT / "docs" / "DEMO_SCRIPT.md").read_text(encoding="utf-8")
-    expected_images = [
-        "dashboard-overview.png",
-        "job-funnel.png",
-        "top-jobs.png",
-        "job-profile-analysis.png",
-        "human-review.png",
-        "prefilter-audit.png",
-        "feedback-insights.png",
-    ]
 
     assert "## Demonstração visual" in readme
     assert "Dados ficticios" in screenshots_guide
     assert "1366x768" in screenshots_guide
     assert "1440x900" in screenshots_guide
+    assert "python scripts\\check_publication_safety.py" in screenshots_guide
     assert "3 minutos" in demo_script
-    for image_name in expected_images:
+    assert "Roteiro com screenshots" in demo_script
+    for image_name in EXPECTED_SCREENSHOT_IMAGES:
         assert image_name in readme
         assert image_name in screenshots_guide
+        assert image_name in demo_script
+
+
+def test_screenshot_placeholders_exist_and_describe_safe_capture():
+    for image_name in EXPECTED_SCREENSHOT_IMAGES:
+        placeholder = ROOT / "docs" / "images" / image_name.replace(".png", ".placeholder.txt")
+
+        assert placeholder.exists(), f"Missing placeholder: {placeholder}"
+        content = placeholder.read_text(encoding="utf-8")
+        assert "Dados ficticios" in content
+        assert f"docs/images/{image_name}" in content
+        assert "Aba do dashboard" in content

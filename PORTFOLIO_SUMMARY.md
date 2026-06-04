@@ -2,7 +2,7 @@
 
 ## Nome do projeto
 
-JobRadar Engineer v1.3.0.
+JobRadar Engineer v1.4.0.
 
 ## Problema resolvido
 
@@ -12,9 +12,9 @@ Buscar vagas aderentes a um perfil tecnico de engenharia consome tempo, exige co
 
 Um robo local em Python que coleta vagas publicas, calcula aderencia ao perfil, remove duplicatas, salva em SQLite, analisa vaga x perfil, envia relatorios por e-mail, permite revisao humana e apresenta tudo em um dashboard Streamlit.
 
-## Status v1.3.0
+## Status v1.4.0
 
-Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada, calibracao assistida por feedback humano e dashboard polido para demonstracao visual. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
+Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada, calibracao assistida por feedback humano, dashboard polido e estrutura visual preparada para screenshots publicos. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
 
 ## Pipeline final
 
@@ -68,7 +68,7 @@ Python, SQLAlchemy, SQLite, Requests, BeautifulSoup, PyYAML, Pandas, Streamlit, 
 
 ## Resultados alcancados
 
-- Versao v1.3.0 executavel com testes automatizados, CI no GitHub Actions, insights de feedback e demo visual.
+- Versao v1.4.0 executavel com testes automatizados, CI no GitHub Actions, insights de feedback e README visual.
 - Dashboard local para tomada de decisao.
 - Fluxo de e-mail e agendamento Windows.
 - Projeto preparado para GitHub sem dados sensiveis.
@@ -87,6 +87,22 @@ Prints recomendados:
 - `docs/images/human-review.png`
 - `docs/images/prefilter-audit.png`
 - `docs/images/feedback-insights.png`
+
+## Evidencias visuais
+
+Os prints publicos devem usar apenas o banco ficticio `data/sample_jobs.db`, selecionando `Dados ficticios` no dashboard.
+
+Screenshots esperados:
+
+- `docs/images/dashboard-overview.png`
+- `docs/images/job-funnel.png`
+- `docs/images/top-jobs.png`
+- `docs/images/job-profile-analysis.png`
+- `docs/images/human-review.png`
+- `docs/images/prefilter-audit.png`
+- `docs/images/feedback-insights.png`
+
+Enquanto os PNGs finais nao forem capturados, os arquivos `.placeholder.txt` em `docs/images/` documentam exatamente qual tela capturar e como revisar privacidade.
 
 ## Proximos passos
 

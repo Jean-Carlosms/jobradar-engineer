@@ -265,17 +265,29 @@
 - [x] Atualizar `RELEASE_NOTES.md` com `v1.3.0 - Visual polish e demo para portfolio`.
 - [x] Adicionar testes para docs visuais e helper de colunas.
 
-### Roadmap pos-v1.3
+### Fase 18 - Screenshots, README visual e publicacao final
 
-- [ ] Capturar screenshots reais sanitizados usando `Dados ficticios`.
-- [ ] Criar video/GIF curto da demo.
-- [ ] Melhorar UX do dashboard com pagina de detalhes da vaga.
-- [ ] Avaliar deploy opcional local/cloud.
-- [ ] Adicionar fonte adicional via API oficial/opcional.
+- [x] Garantir pasta `docs/images/`.
+- [x] Criar placeholders seguros para screenshots esperados.
+- [x] Documentar tela, aba, banco ficticio e PNG final em cada placeholder.
+- [x] Atualizar README mantendo referencias aos PNGs finais.
+- [x] Atualizar `docs/SCREENSHOTS_GUIDE.md` com passo a passo final e checklist de privacidade.
+- [x] Atualizar `docs/DEMO_SCRIPT.md` com roteiro de screenshots.
+- [x] Atualizar `PORTFOLIO_SUMMARY.md` com `Evidencias visuais`.
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.4.0 - Screenshots e README visual`.
+- [x] Adicionar testes para placeholders, README visual, screenshots guide e demo script.
+
+### Roadmap pos-v1.4
+
+- [ ] Capturar imagens finais manualmente usando `Dados ficticios`.
+- [ ] Criar GIF curto da demo.
+- [ ] Publicar post no LinkedIn.
+- [ ] Considerar deploy opcional local/cloud.
+- [ ] Avaliar fonte adicional via API oficial/opcional.
 - [ ] Aplicar sugestoes manualmente em `profile_keywords.yaml` e comparar resultados.
 - [ ] Melhorar schema/migracoes do SQLite.
 
-### Fase 18 - API de busca opcional e sugestoes de slugs
+### Fase 19 - API de busca opcional e sugestoes de slugs
 
 - [ ] Avaliar SerpAPI, Bing Search API ou Google Custom Search API.
 - [ ] Gerar sugestoes automaticas de slugs Gupy a partir de empresas-alvo.
@@ -283,7 +295,7 @@
 - [ ] Marcar automaticamente status observado em relatorio separado.
 - [ ] Priorizar empresas com vagas tecnicas reais nos ultimos dias.
 
-### Fase 19 - Qualidade das fontes
+### Fase 20 - Qualidade das fontes
 
 - [ ] Adicionar clientes para APIs publicas oficiais quando disponiveis.
 - [ ] Melhorar coleta Gupy.
@@ -294,7 +306,7 @@
 - [ ] Adicionar cache de consultas.
 - [ ] Separar resultados de busca por fonte de forma mais precisa.
 
-### Fase 20 - Produto local
+### Fase 21 - Produto local
 
 - [ ] Adicionar pagina de detalhes da vaga no dashboard.
 - [ ] Exportacao Excel.
@@ -303,7 +315,7 @@
 - [ ] Editor local do perfil YAML pelo dashboard.
 - [ ] Adicionar screenshots reais sanitizados.
 
-### Fase 21 - Operacao
+### Fase 22 - Operacao
 
 - [ ] Logs rotativos em arquivo.
 - [ ] Alertas de falha por fonte.

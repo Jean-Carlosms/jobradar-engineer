@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.4.0 - Screenshots e README visual
+
+- Adicionados placeholders seguros para os screenshots finais em `docs/images/`.
+- README manteve referencias aos PNGs finais e passou a orientar uso do `docs/SCREENSHOTS_GUIDE.md` quando as imagens ainda nao existirem.
+- `docs/SCREENSHOTS_GUIDE.md` recebeu passo a passo final e checklist de privacidade antes da publicacao.
+- `docs/DEMO_SCRIPT.md` passou a incluir roteiro com as sete imagens esperadas.
+- `PORTFOLIO_SUMMARY.md` recebeu secao `Evidencias visuais`.
+- TODO atualizado com Fase 18 concluida e roadmap pos-v1.4.
+
 ## v1.3.0 - Visual polish e demo para portfolio
 
 - Dashboard reorganizado em abas para resumo executivo, funil, top vagas, analise, revisao, auditoria, insights e exportacoes.

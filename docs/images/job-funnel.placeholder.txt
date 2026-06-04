@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: funil do pipeline com as etapas Coleta, Pre-filtro, Match, Analise e Revisao.
+Aba do dashboard: Funil de Vagas.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/job-funnel.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

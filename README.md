@@ -4,7 +4,7 @@
 [![CI](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml)
 ![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-red)
 ![SQLite](https://img.shields.io/badge/SQLite-local-lightgrey)
-![Status](https://img.shields.io/badge/Status-v1.3.0-success)
+![Status](https://img.shields.io/badge/Status-v1.4.0-success)
 
 ## Visao geral
 
@@ -12,7 +12,7 @@ JobRadar Engineer e um robo local em Python para buscar, pontuar, analisar e vis
 
 O projeto foi preparado para uso local e apresentacao em portfolio, com dados ficticios, dashboard Streamlit, testes automatizados e cuidados para nao versionar informacoes sensiveis.
 
-Status atual: `v1.3.0 - Visual polish e demo para portfolio`.
+Status atual: `v1.4.0 - Screenshots e README visual`.
 
 ## Problema
 
@@ -533,6 +533,8 @@ Os screenshots publicos devem usar apenas `Dados ficticios` no dashboard. Imagen
 - `docs/images/prefilter-audit.png`: auditoria do pre-filtro.
 - `docs/images/feedback-insights.png`: insights de feedback.
 
+Se as imagens `.png` ainda nao estiverem presentes, siga `docs/SCREENSHOTS_GUIDE.md` e use os placeholders em `docs/images/` como checklist seguro.
+
 Roteiro de demo: `docs/DEMO_SCRIPT.md`.
 
 ## Screenshots futuros
@@ -571,7 +573,7 @@ python -m pytest
 
 ## Status do projeto
 
-Versao atual: `v1.3.0 - Visual polish e demo para portfolio`.
+Versao atual: `v1.4.0 - Screenshots e README visual`.
 
 Testes:
 

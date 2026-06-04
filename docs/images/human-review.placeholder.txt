@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: formulario de revisao humana com status, favorita e observacoes.
+Aba do dashboard: Revisao Humana.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/human-review.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

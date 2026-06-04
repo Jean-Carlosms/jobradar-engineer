@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: analise detalhada de uma vaga contra o perfil.
+Aba do dashboard: Analise Vaga x Perfil.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/job-profile-analysis.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

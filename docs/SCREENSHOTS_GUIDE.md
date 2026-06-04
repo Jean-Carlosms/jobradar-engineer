@@ -70,3 +70,41 @@ streamlit run dashboard.py
 4. Capture as abas na ordem do checklist.
 5. Salve as imagens em `docs/images/`.
 6. Revise cada imagem manualmente antes de publicar.
+
+## Passo a passo final
+
+1. Rode:
+
+```bat
+python scripts\load_sample_data.py
+```
+
+2. Abra o dashboard:
+
+```bat
+streamlit run dashboard.py
+```
+
+3. No menu lateral, selecione `Dados ficticios`.
+4. Capture cada aba indicada no checklist.
+5. Salve os PNGs finais em `docs/images/`.
+6. Compare cada PNG com seu placeholder `.placeholder.txt`.
+7. Revise se nao ha dado real, e-mail, token, caminho local sensivel, banco real, log real ou URL privada.
+8. Rode:
+
+```bat
+python scripts\check_publication_safety.py
+```
+
+## Checklist de privacidade antes de publicar
+
+- [ ] O dashboard esta em `Dados ficticios`.
+- [ ] Nenhuma imagem mostra `.env`.
+- [ ] Nenhuma imagem mostra `data/jobs.db`.
+- [ ] Nenhuma imagem mostra logs reais.
+- [ ] Nenhuma imagem mostra relatorios reais.
+- [ ] Nenhuma imagem mostra e-mail real.
+- [ ] Nenhuma imagem mostra credenciais, tokens ou senhas.
+- [ ] Nenhuma imagem mostra caminhos locais sensiveis.
+- [ ] Nenhuma imagem mostra URLs privadas ou sensiveis.
+- [ ] `python scripts\check_publication_safety.py` passou antes da publicacao.

@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: ranking de oportunidades e empresas prioritarias.
+Aba do dashboard: Top Vagas.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/top-jobs.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

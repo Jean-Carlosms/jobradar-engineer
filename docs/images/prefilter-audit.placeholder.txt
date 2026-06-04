@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: resumo da auditoria do pre-filtro e tabelas de revisao.
+Aba do dashboard: Auditoria do Pre-filtro.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/prefilter-audit.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

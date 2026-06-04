@@ -1,0 +1,8 @@
+Placeholder seguro para screenshot.
+
+Tela a capturar: resumo dos insights de feedback humano.
+Aba do dashboard: Insights de Feedback.
+Banco obrigatório: Dados ficticios.
+Imagem PNG final esperada: docs/images/feedback-insights.png.
+
+Antes de publicar, confirme que nao ha e-mail, caminho local sensivel, URL privada, log real ou dado real visivel.

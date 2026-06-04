@@ -1,5 +1,15 @@
 # Release Notes
 
+## v1.3.0 - Visual polish e demo para portfolio
+
+- Dashboard reorganizado em abas para resumo executivo, funil, top vagas, analise, revisao, auditoria, insights e exportacoes.
+- Adicionada visao de funil com Coleta -> Pre-filtro -> Match -> Analise -> Revisao.
+- Padronizados nomes de colunas exibidas no dashboard.
+- README atualizado com secao `Demonstracao visual` e referencias aos screenshots finais.
+- `docs/SCREENSHOTS_GUIDE.md` atualizado com checklist, resolucao sugerida e nomes padronizados.
+- Criado `docs/DEMO_SCRIPT.md` com roteiro de demonstracao em 3 minutos.
+- `PORTFOLIO_SUMMARY.md` atualizado com orientacoes de demo visual e prints recomendados.
+
 ## v1.2.0 - Feedback insights e calibracao assistida
 
 - Adicionado servico `FeedbackInsightsService` para analisar revisoes humanas salvas no SQLite.

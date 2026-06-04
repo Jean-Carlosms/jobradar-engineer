@@ -2,7 +2,7 @@
 
 ## Nome do projeto
 
-JobRadar Engineer v1.2.0.
+JobRadar Engineer v1.3.0.
 
 ## Problema resolvido
 
@@ -12,9 +12,9 @@ Buscar vagas aderentes a um perfil tecnico de engenharia consome tempo, exige co
 
 Um robo local em Python que coleta vagas publicas, calcula aderencia ao perfil, remove duplicatas, salva em SQLite, analisa vaga x perfil, envia relatorios por e-mail, permite revisao humana e apresenta tudo em um dashboard Streamlit.
 
-## Status v1.2.0
+## Status v1.3.0
 
-Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada e calibracao assistida por feedback humano. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
+Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada, calibracao assistida por feedback humano e dashboard polido para demonstracao visual. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
 
 ## Pipeline final
 
@@ -68,11 +68,25 @@ Python, SQLAlchemy, SQLite, Requests, BeautifulSoup, PyYAML, Pandas, Streamlit, 
 
 ## Resultados alcancados
 
-- Versao v1.2.0 executavel com testes automatizados, CI no GitHub Actions e insights de feedback.
+- Versao v1.3.0 executavel com testes automatizados, CI no GitHub Actions, insights de feedback e demo visual.
 - Dashboard local para tomada de decisao.
 - Fluxo de e-mail e agendamento Windows.
 - Projeto preparado para GitHub sem dados sensiveis.
 - Auditoria e revisao humana para calibrar relevancia.
+
+## Como demonstrar visualmente
+
+Use somente `Dados ficticios` no dashboard para qualquer demo publica. O fluxo recomendado e abrir `streamlit run dashboard.py`, selecionar `Dados ficticios`, mostrar `Resumo Executivo`, explicar o funil Coleta -> Pre-filtro -> Match -> Analise -> Revisao e depois abrir uma vaga para mostrar analise, revisao humana e insights.
+
+Prints recomendados:
+
+- `docs/images/dashboard-overview.png`
+- `docs/images/job-funnel.png`
+- `docs/images/top-jobs.png`
+- `docs/images/job-profile-analysis.png`
+- `docs/images/human-review.png`
+- `docs/images/prefilter-audit.png`
+- `docs/images/feedback-insights.png`
 
 ## Proximos passos
 

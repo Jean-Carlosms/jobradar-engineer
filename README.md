@@ -4,7 +4,7 @@
 [![CI](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml)
 ![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-red)
 ![SQLite](https://img.shields.io/badge/SQLite-local-lightgrey)
-![Status](https://img.shields.io/badge/Status-v1.2.0-success)
+![Status](https://img.shields.io/badge/Status-v1.3.0-success)
 
 ## Visao geral
 
@@ -12,7 +12,7 @@ JobRadar Engineer e um robo local em Python para buscar, pontuar, analisar e vis
 
 O projeto foi preparado para uso local e apresentacao em portfolio, com dados ficticios, dashboard Streamlit, testes automatizados e cuidados para nao versionar informacoes sensiveis.
 
-Status atual: `v1.2.0 - Feedback insights e calibracao assistida`.
+Status atual: `v1.3.0 - Visual polish e demo para portfolio`.
 
 ## Problema
 
@@ -362,6 +362,17 @@ Abrir dashboard:
 streamlit run dashboard.py
 ```
 
+O dashboard esta organizado em abas para demonstracao:
+
+- `Resumo Executivo`: visao inicial com metricas principais e pipeline.
+- `Funil de Vagas`: Coleta -> Pre-filtro -> Match -> Analise -> Revisao.
+- `Top Vagas`: ranking das melhores oportunidades filtradas.
+- `Analise Vaga x Perfil`: fit score, competencias, lacunas e mensagem sugerida.
+- `Revisao Humana`: status, favorita e notas manuais.
+- `Auditoria do Pre-filtro`: leitura do CSV de debug mais recente.
+- `Insights de Feedback`: resumo das revisoes humanas.
+- `Exportacoes`: CSVs e comandos auxiliares.
+
 ## Como revisar vagas no dashboard
 
 1. Rode uma coleta real ou carregue dados ficticios.
@@ -510,6 +521,20 @@ Veja tambem:
 - Criar favoritos, bloqueios e detalhes da vaga.
 - Adicionar CI real no GitHub Actions.
 
+## Demonstração visual
+
+Os screenshots publicos devem usar apenas `Dados ficticios` no dashboard. Imagens recomendadas:
+
+- `docs/images/dashboard-overview.png`: resumo executivo.
+- `docs/images/job-funnel.png`: funil de vagas.
+- `docs/images/top-jobs.png`: top vagas.
+- `docs/images/job-profile-analysis.png`: analise vaga x perfil.
+- `docs/images/human-review.png`: revisao humana.
+- `docs/images/prefilter-audit.png`: auditoria do pre-filtro.
+- `docs/images/feedback-insights.png`: insights de feedback.
+
+Roteiro de demo: `docs/DEMO_SCRIPT.md`.
+
 ## Screenshots futuros
 
 Os prints devem ser feitos com `data/sample_jobs.db` ou dados sanitizados:
@@ -546,7 +571,7 @@ python -m pytest
 
 ## Status do projeto
 
-Versao atual: `v1.2.0 - Feedback insights e calibracao assistida`.
+Versao atual: `v1.3.0 - Visual polish e demo para portfolio`.
 
 Testes:
 

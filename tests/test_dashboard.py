@@ -2,7 +2,16 @@ import sqlite3
 
 import pandas as pd
 
-from dashboard import calculate_metrics, filter_jobs, load_jobs, normalize_jobs_dataframe, to_display_dataframe
+from dashboard import (
+    calculate_funnel_metrics,
+    calculate_metrics,
+    display_column_name,
+    filter_jobs,
+    load_jobs,
+    normalize_jobs_dataframe,
+    standardize_display_columns,
+    to_display_dataframe,
+)
 
 
 def make_dashboard_dataframe() -> pd.DataFrame:
@@ -73,12 +82,56 @@ def test_filter_jobs_applies_score_status_priority_and_text():
 def test_to_display_dataframe_uses_expected_columns():
     display = to_display_dataframe(make_dashboard_dataframe())
 
-    assert "motivo de aderencia" in display.columns
-    assert "status revisao" in display.columns
-    assert "favorita" in display.columns
-    assert "link" in display.columns
-    assert display.iloc[0]["empresa prioritaria"] == "sim"
-    assert display.iloc[0]["favorita"] == "sim"
+    assert "Título" in display.columns
+    assert "Empresa" in display.columns
+    assert "Match Score" in display.columns
+    assert "Pré-filtro" in display.columns
+    assert "Revisão" in display.columns
+    assert "Favorita" in display.columns
+    assert "Link" in display.columns
+    assert display.iloc[0]["Favorita"] == "sim"
+
+
+def test_standardize_display_columns_uses_portfolio_labels():
+    dataframe = pd.DataFrame(
+        [
+            {
+                "title": "Engenheiro",
+                "company": "Empresa",
+                "location": "Campinas",
+                "source": "mock",
+                "match_score": 90,
+                "fit_score": 80,
+                "prefilter_score": 70,
+                "review_status": "relevant",
+                "is_favorite": True,
+            }
+        ]
+    )
+
+    display = standardize_display_columns(dataframe)
+
+    assert display_column_name("title") == "Título"
+    assert display_column_name("prefilter_score") == "Pré-filtro"
+    assert {"Título", "Empresa", "Localidade", "Fonte", "Match Score", "Fit Score", "Pré-filtro", "Revisão", "Favorita"}.issubset(
+        set(display.columns)
+    )
+
+
+def test_calculate_funnel_metrics_for_dashboard_dataframe():
+    dataframe = make_dashboard_dataframe()
+    dataframe.loc[0, "prefilter_score"] = 55
+    dataframe.loc[0, "fit_level"] = "alto"
+    dataframe.loc[0, "fit_score"] = 82
+
+    funnel = calculate_funnel_metrics(dataframe)
+
+    assert funnel["total_jobs"] == 2
+    assert funnel["prefiltered_jobs"] == 1
+    assert funnel["matched_jobs"] == 2
+    assert funnel["analyzed_jobs"] == 1
+    assert funnel["reviewed_jobs"] == 1
+    assert funnel["favorite_jobs"] == 1
 
 
 def test_load_jobs_reads_sqlite_database(tmp_path):

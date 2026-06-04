@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_phase6_documentation_files_exist():
     expected_files = [
         ROOT / "docs" / "SCREENSHOTS_GUIDE.md",
+        ROOT / "docs" / "DEMO_SCRIPT.md",
         ROOT / "PORTFOLIO_SUMMARY.md",
         ROOT / "RELEASE_NOTES.md",
         ROOT / "SECURITY.md",
@@ -92,3 +93,27 @@ def test_readme_contains_professional_sections():
 
     for section in sections:
         assert section in readme
+
+
+def test_visual_demo_docs_reference_expected_screenshots():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    screenshots_guide = (ROOT / "docs" / "SCREENSHOTS_GUIDE.md").read_text(encoding="utf-8")
+    demo_script = (ROOT / "docs" / "DEMO_SCRIPT.md").read_text(encoding="utf-8")
+    expected_images = [
+        "dashboard-overview.png",
+        "job-funnel.png",
+        "top-jobs.png",
+        "job-profile-analysis.png",
+        "human-review.png",
+        "prefilter-audit.png",
+        "feedback-insights.png",
+    ]
+
+    assert "## Demonstração visual" in readme
+    assert "Dados ficticios" in screenshots_guide
+    assert "1366x768" in screenshots_guide
+    assert "1440x900" in screenshots_guide
+    assert "3 minutos" in demo_script
+    for image_name in expected_images:
+        assert image_name in readme
+        assert image_name in screenshots_guide

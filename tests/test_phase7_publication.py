@@ -58,10 +58,10 @@ def test_release_docs_reference_v1():
     checklist = (ROOT / "docs" / "PUBLISHING_CHECKLIST.md").read_text(encoding="utf-8")
     portfolio = (ROOT / "PORTFOLIO_SUMMARY.md").read_text(encoding="utf-8")
 
-    assert "v1.2.0 - Feedback insights e calibracao assistida" in release_notes
-    assert "Status atual: `v1.2.0 - Feedback insights e calibracao assistida`" in readme
-    assert "Publishing Checklist v1.2.0" in checklist
-    assert "JobRadar Engineer v1.2.0" in portfolio
+    assert "v1.3.0 - Visual polish e demo para portfolio" in release_notes
+    assert "Status atual: `v1.3.0 - Visual polish e demo para portfolio`" in readme
+    assert "Publishing Checklist v1.3.0" in checklist
+    assert "JobRadar Engineer v1.3.0" in portfolio
 
 
 def test_publication_docs_warn_about_runtime_paths():

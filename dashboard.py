@@ -62,29 +62,54 @@ DERIVED_ANALYSIS_COLUMNS = [
     "resume_keywords",
 ]
 
-DISPLAY_COLUMNS = {
-    "title": "titulo",
-    "company": "empresa",
-    "location": "local",
-    "source": "fonte",
-    "match_score": "score",
-    "match_reason": "motivo de aderencia",
-    "priority_company": "empresa prioritaria",
-    "prefilter_score": "score pre-filtro",
-    "prefilter_reason": "motivo pre-filtro",
-    "review_status": "status revisao",
-    "is_favorite": "favorita",
-    "viewed_at": "visualizada em",
-    "already_sent": "enviada",
-    "query_used": "query usada",
-    "fit_level": "fit level",
-    "fit_score": "fit score",
-    "matched_skills": "competencias encontradas",
-    "missing_skills": "competencias faltantes",
-    "analysis_summary": "resumo da analise",
-    "recruiter_message": "mensagem recrutador",
-    "url": "link",
+STANDARD_COLUMN_LABELS = {
+    "title": "Título",
+    "company": "Empresa",
+    "location": "Localidade",
+    "source": "Fonte",
+    "match_score": "Match Score",
+    "fit_score": "Fit Score",
+    "prefilter_score": "Pré-filtro",
+    "review_status": "Revisão",
+    "is_favorite": "Favorita",
 }
+
+DISPLAY_COLUMNS = {
+    "title": STANDARD_COLUMN_LABELS["title"],
+    "company": STANDARD_COLUMN_LABELS["company"],
+    "location": STANDARD_COLUMN_LABELS["location"],
+    "source": STANDARD_COLUMN_LABELS["source"],
+    "match_score": STANDARD_COLUMN_LABELS["match_score"],
+    "match_reason": "Motivo de Aderência",
+    "priority_company": "Empresa Prioritária",
+    "prefilter_score": STANDARD_COLUMN_LABELS["prefilter_score"],
+    "prefilter_reason": "Motivo do Pré-filtro",
+    "review_status": STANDARD_COLUMN_LABELS["review_status"],
+    "is_favorite": STANDARD_COLUMN_LABELS["is_favorite"],
+    "viewed_at": "Visualizada em",
+    "already_sent": "Enviada",
+    "query_used": "Query usada",
+    "fit_level": "Fit Level",
+    "fit_score": STANDARD_COLUMN_LABELS["fit_score"],
+    "matched_skills": "Competências Encontradas",
+    "missing_skills": "Competências Faltantes",
+    "analysis_summary": "Resumo da Análise",
+    "recruiter_message": "Mensagem ao Recrutador",
+    "url": "Link",
+}
+
+CORE_DISPLAY_COLUMNS = [
+    "title",
+    "company",
+    "location",
+    "source",
+    "prefilter_score",
+    "match_score",
+    "fit_score",
+    "review_status",
+    "is_favorite",
+    "url",
+]
 
 
 def empty_jobs_dataframe() -> pd.DataFrame:
@@ -187,6 +212,31 @@ def calculate_metrics(dataframe: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+def calculate_funnel_metrics(dataframe: pd.DataFrame) -> dict[str, int]:
+    if dataframe.empty:
+        return {
+            "total_jobs": 0,
+            "prefiltered_jobs": 0,
+            "matched_jobs": 0,
+            "analyzed_jobs": 0,
+            "reviewed_jobs": 0,
+            "favorite_jobs": 0,
+            "applied_jobs": 0,
+        }
+
+    has_prefilter = (dataframe["prefilter_score"] > 0) | dataframe["prefilter_reason"].astype(str).str.len().gt(0)
+    has_analysis = dataframe["fit_level"].astype(str).str.len().gt(0) | (dataframe["fit_score"] > 0)
+    return {
+        "total_jobs": int(len(dataframe)),
+        "prefiltered_jobs": int(has_prefilter.sum()),
+        "matched_jobs": int((dataframe["match_score"] > 0).sum()),
+        "analyzed_jobs": int(has_analysis.sum()),
+        "reviewed_jobs": int((dataframe["review_status"] != "unreviewed").sum()),
+        "favorite_jobs": int(dataframe["is_favorite"].sum()),
+        "applied_jobs": int((dataframe["review_status"] == "applied").sum()),
+    }
+
+
 def filter_jobs(
     dataframe: pd.DataFrame,
     min_score: float = 0.0,
@@ -235,18 +285,26 @@ def filter_jobs(
     return filtered.sort_values(["match_score", "collected_at"], ascending=[False, False])
 
 
+def display_column_name(column: str) -> str:
+    return STANDARD_COLUMN_LABELS.get(column, DISPLAY_COLUMNS.get(column, column))
+
+
+def standardize_display_columns(dataframe: pd.DataFrame) -> pd.DataFrame:
+    return dataframe.rename(columns={column: display_column_name(column) for column in dataframe.columns})
+
+
 def to_display_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
-    display_columns = list(DISPLAY_COLUMNS.keys())
+    display_columns = [column for column in CORE_DISPLAY_COLUMNS if column in dataframe.columns]
     working = dataframe.copy()
     for column in ["matched_skills", "missing_skills"]:
         if column not in working.columns:
             working[column] = ""
-    display = working[display_columns].rename(columns=DISPLAY_COLUMNS)
-    display["score"] = display["score"].round(1)
-    display["score pre-filtro"] = display["score pre-filtro"].round(1)
-    display["empresa prioritaria"] = display["empresa prioritaria"].map({True: "sim", False: "nao"})
-    display["favorita"] = display["favorita"].map({True: "sim", False: "nao"})
-    display["enviada"] = display["enviada"].map({True: "sim", False: "nao"})
+    display = standardize_display_columns(working[display_columns])
+    for score_column in ["Match Score", "Pré-filtro", "Fit Score"]:
+        if score_column in display:
+            display[score_column] = display[score_column].round(1)
+    if "Favorita" in display:
+        display["Favorita"] = display["Favorita"].map({True: "sim", False: "nao"})
     return display
 
 
@@ -340,7 +398,7 @@ def _default_value_for(column: str) -> Any:
 def run_dashboard() -> None:
     st.set_page_config(page_title="JobRadar Engineer", layout="wide")
     st.title("JobRadar Engineer")
-    st.caption("Dashboard local das vagas coletadas no SQLite.")
+    st.caption("Coleta -> Pré-filtro -> Match -> Análise -> Revisão")
 
     db_path = select_database_path()
     jobs = load_jobs(db_path)
@@ -356,68 +414,141 @@ def run_dashboard() -> None:
         st.info("Nenhuma vaga coletada ainda. Execute o robo para popular o banco local.")
         return
 
-    metrics = calculate_metrics(jobs)
-    metric_columns = st.columns(6)
-    metric_columns[0].metric("Total", metrics["total_jobs"])
-    metric_columns[1].metric("Enviadas", metrics["sent_jobs"])
-    metric_columns[2].metric("Nao enviadas", metrics["unsent_jobs"])
-    metric_columns[3].metric("Score medio", f"{metrics['average_score']:.1f}")
-    metric_columns[4].metric("Maior score", f"{metrics['max_score']:.1f}")
-    metric_columns[5].metric("Prioritarias", metrics["priority_companies"])
-    review_columns = st.columns(6)
-    review_columns[0].metric("Revisadas", metrics["reviewed_jobs"])
-    review_columns[1].metric("Relevantes", metrics["relevant_jobs"])
-    review_columns[2].metric("Irrelevantes", metrics["irrelevant_jobs"])
-    review_columns[3].metric("Talvez", metrics["maybe_jobs"])
-    review_columns[4].metric("Aplicadas", metrics["applied_jobs"])
-    review_columns[5].metric("Favoritas", metrics["favorite_jobs"])
-
     filtered = render_sidebar_filters(jobs)
+    metrics = calculate_metrics(filtered)
+    funnel = calculate_funnel_metrics(filtered)
 
-    st.subheader("Vagas filtradas")
     if filtered.empty:
         st.warning("Nenhuma vaga atende aos filtros selecionados.")
         return
 
-    display = to_display_dataframe(filtered)
+    tabs = st.tabs(
+        [
+            "Resumo Executivo",
+            "Funil de Vagas",
+            "Top Vagas",
+            "Análise Vaga x Perfil",
+            "Revisão Humana",
+            "Auditoria do Pré-filtro",
+            "Insights de Feedback",
+            "Exportações",
+        ]
+    )
+
+    with tabs[0]:
+        render_executive_summary(filtered, metrics, funnel)
+    with tabs[1]:
+        render_job_funnel(filtered, funnel)
+    with tabs[2]:
+        render_top_jobs_section(filtered)
+    with tabs[3]:
+        render_analysis_section(filtered)
+    with tabs[4]:
+        render_human_review_section(filtered, db_path)
+    with tabs[5]:
+        render_prefilter_audit_section()
+    with tabs[6]:
+        render_feedback_insights_section(db_path)
+    with tabs[7]:
+        render_exports_section(filtered)
+
+
+def render_executive_summary(dataframe: pd.DataFrame, metrics: dict[str, Any], funnel: dict[str, int]) -> None:
+    st.subheader("Resumo Executivo")
+    st.caption("Visão rápida das vagas filtradas e do estágio atual do pipeline.")
+    metric_columns = st.columns(5)
+    metric_columns[0].metric("Vagas", metrics["total_jobs"])
+    metric_columns[1].metric("Match Médio", f"{metrics['average_score']:.1f}")
+    metric_columns[2].metric("Maior Match", f"{metrics['max_score']:.1f}")
+    metric_columns[3].metric("Analisadas", funnel["analyzed_jobs"])
+    metric_columns[4].metric("Revisadas", funnel["reviewed_jobs"])
+
+    review_columns = st.columns(5)
+    review_columns[0].metric("Relevantes", metrics["relevant_jobs"])
+    review_columns[1].metric("Talvez", metrics["maybe_jobs"])
+    review_columns[2].metric("Aplicadas", metrics["applied_jobs"])
+    review_columns[3].metric("Favoritas", metrics["favorite_jobs"])
+    review_columns[4].metric("Prioritárias", metrics["priority_companies"])
+
+    st.markdown("**Pipeline:** Coleta -> Pré-filtro -> Match -> Análise -> Revisão")
+    top_preview = dataframe.head(5)
+    st.dataframe(
+        to_display_dataframe(top_preview),
+        use_container_width=True,
+        hide_index=True,
+        column_config={"Link": st.column_config.LinkColumn("Link")},
+    )
+
+
+def render_job_funnel(dataframe: pd.DataFrame, funnel: dict[str, int]) -> None:
+    st.subheader("Funil de Vagas")
+    st.caption("Quantidade de vagas em cada etapa do fluxo local.")
+    funnel_rows = [
+        ("Coleta", funnel["total_jobs"]),
+        ("Pré-filtro", funnel["prefiltered_jobs"]),
+        ("Match", funnel["matched_jobs"]),
+        ("Análise", funnel["analyzed_jobs"]),
+        ("Revisão", funnel["reviewed_jobs"]),
+        ("Favoritas", funnel["favorite_jobs"]),
+        ("Aplicadas", funnel["applied_jobs"]),
+    ]
+    funnel_dataframe = pd.DataFrame(funnel_rows, columns=["Etapa", "Total"])
+    st.bar_chart(funnel_dataframe.set_index("Etapa"))
+
+    columns = st.columns(len(funnel_rows))
+    for column, (label, value) in zip(columns, funnel_rows):
+        column.metric(label, value)
+
+    render_charts(dataframe)
+
+
+def render_top_jobs_section(dataframe: pd.DataFrame) -> None:
+    st.subheader("Top Vagas")
+    st.caption("Vagas com maior aderência depois dos filtros laterais.")
+    st.dataframe(
+        to_display_dataframe(dataframe.head(10)),
+        use_container_width=True,
+        hide_index=True,
+        column_config={"Link": st.column_config.LinkColumn("Link")},
+    )
+
+    priority_jobs = dataframe[dataframe["priority_company"]]
+    st.subheader("Empresas Prioritárias")
+    if priority_jobs.empty:
+        st.info("Nenhuma vaga filtrada pertence a empresas prioritárias.")
+    else:
+        st.dataframe(
+            to_display_dataframe(priority_jobs.head(15)),
+            use_container_width=True,
+            hide_index=True,
+            column_config={"Link": st.column_config.LinkColumn("Link")},
+        )
+
+
+def render_exports_section(dataframe: pd.DataFrame) -> None:
+    st.subheader("Exportações")
+    st.caption("Arquivos locais para análise manual, portfólio e calibragem.")
+    display = to_display_dataframe(dataframe)
     st.download_button(
-        "Exportar CSV",
+        "Exportar vagas filtradas CSV",
         data=display.to_csv(index=False).encode("utf-8-sig"),
         file_name="jobradar_vagas_filtradas.csv",
         mime="text/csv",
     )
-    st.dataframe(
-        display,
-        use_container_width=True,
-        hide_index=True,
-        column_config={"link": st.column_config.LinkColumn("link")},
-    )
-
-    st.subheader("Top Vagas")
-    st.dataframe(
-        to_display_dataframe(filtered.head(10)),
-        use_container_width=True,
-        hide_index=True,
-        column_config={"link": st.column_config.LinkColumn("link")},
-    )
-
-    priority_jobs = filtered[filtered["priority_company"]]
-    st.subheader("Empresas Prioritarias")
-    if priority_jobs.empty:
-        st.info("Nenhuma vaga filtrada pertence a empresas prioritarias.")
-    else:
-        st.dataframe(
-            to_display_dataframe(priority_jobs),
-            use_container_width=True,
-            hide_index=True,
-            column_config={"link": st.column_config.LinkColumn("link")},
+    analyzed = dataframe[dataframe["fit_level"].astype(str).str.len() > 0]
+    if not analyzed.empty:
+        st.download_button(
+            "Exportar análises CSV",
+            data=analysis_export_dataframe(analyzed).to_csv(index=False).encode("utf-8-sig"),
+            file_name="jobradar_analises.csv",
+            mime="text/csv",
         )
-
-    render_human_review_section(filtered, db_path)
-    render_feedback_insights_section(db_path)
-    render_analysis_section(filtered)
-    render_charts(filtered)
-    render_prefilter_audit_section()
+    st.info(
+        "Relatórios completos via CLI: "
+        "`python -m src.main --export-review-feedback`, "
+        "`python -m src.main --feedback-insights` e "
+        "`python -m src.main --audit-prefilter-only --audit-input logs/gupy_debug/prefilter_YYYYMMDD_HHMMSS.csv`."
+    )
 
 
 def select_database_path() -> Path:

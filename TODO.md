@@ -250,13 +250,30 @@
 - [ ] Adicionar mais fontes ou APIs publicas oficiais.
 - [ ] Melhorar dashboard com pagina de detalhes da vaga.
 
-### Fase 17 - Enriquecimento por prioridade e dashboard
+### Fase 17 - Melhorias visuais e screenshots finais
 
-- [ ] Ajustar dashboard para analisar funil Gupy por empresa e pre-filtro.
-- [ ] Criar filtros por `prefilter_score`.
-- [ ] Enriquecer detalhes por prioridade combinada de empresa, localidade e pre-filtro.
-- [ ] Criar pagina de detalhes da vaga no dashboard.
-- [ ] Adicionar controle manual de favoritos/bloqueios.
+- [x] Organizar dashboard em abas com secoes claras.
+- [x] Criar visao inicial `Resumo Executivo`.
+- [x] Destacar pipeline Coleta -> Pre-filtro -> Match -> Analise -> Revisao.
+- [x] Criar secao `Funil de Vagas`.
+- [x] Manter secoes `Top Vagas`, `Analise Vaga x Perfil`, `Revisao Humana`, `Auditoria do Pre-filtro`, `Insights de Feedback` e `Exportacoes`.
+- [x] Criar helper para padronizar nomes de colunas exibidas.
+- [x] Atualizar README com `Demonstracao visual`.
+- [x] Atualizar `docs/SCREENSHOTS_GUIDE.md` com checklist final.
+- [x] Criar `docs/DEMO_SCRIPT.md`.
+- [x] Atualizar `PORTFOLIO_SUMMARY.md` com demo visual e prints recomendados.
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.3.0 - Visual polish e demo para portfolio`.
+- [x] Adicionar testes para docs visuais e helper de colunas.
+
+### Roadmap pos-v1.3
+
+- [ ] Capturar screenshots reais sanitizados usando `Dados ficticios`.
+- [ ] Criar video/GIF curto da demo.
+- [ ] Melhorar UX do dashboard com pagina de detalhes da vaga.
+- [ ] Avaliar deploy opcional local/cloud.
+- [ ] Adicionar fonte adicional via API oficial/opcional.
+- [ ] Aplicar sugestoes manualmente em `profile_keywords.yaml` e comparar resultados.
+- [ ] Melhorar schema/migracoes do SQLite.
 
 ### Fase 18 - API de busca opcional e sugestoes de slugs
 

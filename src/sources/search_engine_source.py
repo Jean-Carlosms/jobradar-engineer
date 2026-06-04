@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from html import unescape
-from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 import requests

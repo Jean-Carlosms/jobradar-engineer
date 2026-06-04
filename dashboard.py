@@ -11,6 +11,7 @@ import streamlit as st
 
 from src.config import Settings
 from src.database import JobRepository
+from src.services.feedback_insights import FeedbackInsightsService
 from src.services.job_review_service import REVIEW_STATUSES, JobReviewService
 
 
@@ -413,6 +414,7 @@ def run_dashboard() -> None:
         )
 
     render_human_review_section(filtered, db_path)
+    render_feedback_insights_section(db_path)
     render_analysis_section(filtered)
     render_charts(filtered)
     render_prefilter_audit_section()
@@ -612,6 +614,44 @@ def _review_service(db_path: str | Path) -> JobReviewService:
     repository = JobRepository(settings)
     repository.init_db()
     return JobReviewService(repository)
+
+
+def render_feedback_insights_section(db_path: str | Path) -> None:
+    st.subheader("Insights de Feedback")
+    settings = Settings(database_path=Path(db_path))
+    repository = JobRepository(settings)
+    repository.init_db()
+    summary = FeedbackInsightsService(repository).summarize()
+    status_counts = summary["status_counts"]
+
+    columns = st.columns(4)
+    columns[0].metric("Revisadas", summary["reviewed_count"])
+    columns[1].metric("Relevantes", status_counts.get("relevant", 0) + status_counts.get("applied", 0))
+    columns[2].metric("Irrelevantes", status_counts.get("irrelevant", 0) + status_counts.get("ignored", 0))
+    columns[3].metric("Talvez", status_counts.get("maybe", 0))
+
+    left, right = st.columns(2)
+    with left:
+        st.write("Top empresas relevantes")
+        st.dataframe(
+            _counter_dataframe(summary["top_relevant_companies"]),
+            use_container_width=True,
+            hide_index=True,
+        )
+    with right:
+        st.write("Top empresas irrelevantes")
+        st.dataframe(
+            _counter_dataframe(summary["top_irrelevant_companies"]),
+            use_container_width=True,
+            hide_index=True,
+        )
+    st.info("Gere o relatorio completo via CLI: `python -m src.main --feedback-insights`.")
+
+
+def _counter_dataframe(items: list[tuple[str, int]]) -> pd.DataFrame:
+    if not items:
+        return pd.DataFrame([{"item": "nenhum dado", "total": 0}])
+    return pd.DataFrame([{"item": item, "total": count} for item, count in items])
 
 
 def _review_status_label(status: str) -> str:

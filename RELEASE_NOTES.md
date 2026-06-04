@@ -1,5 +1,24 @@
 # Release Notes
 
+## v1.2.0 - Feedback insights e calibracao assistida
+
+- Adicionado servico `FeedbackInsightsService` para analisar revisoes humanas salvas no SQLite.
+- Adicionados relatorios Markdown e CSV em `reports/feedback_insights_YYYYMMDD_HHMMSS.*`.
+- Adicionados comandos `--feedback-insights` e `--feedback-insights-min-reviewed`.
+- Dashboard passou a exibir resumo opcional de insights de feedback.
+- Relatorios destacam termos positivos/negativos, empresas, titulos, localidades, falsos positivos, falsos negativos e favoritas.
+- Sugestoes sao assistivas e nao alteram `profile_keywords.yaml` automaticamente.
+- Adicionados testes para servico, relatorios e CLI.
+
+## v1.1.0 - CI e qualidade automatizada
+
+- Adicionado workflow real de GitHub Actions em `.github/workflows/ci.yml`.
+- CI configurado para Ubuntu e Windows com Python 3.11.
+- Pipeline passou a instalar dependencias, rodar Ruff, safety check de publicacao e pytest.
+- Adicionado `requirements-dev.txt` para dependencias de desenvolvimento.
+- README atualizado com badge real do GitHub Actions e comandos locais de qualidade.
+- Adicionados testes para garantir a existencia e os comandos obrigatorios do workflow.
+
 ## v1.0.0 - Primeira versao completa
 
 - Consolidado pipeline completo: coleta, deduplicacao, pre-filtro tecnico, enriquecimento Gupy, score explicavel, analise vaga x perfil, e-mail e dashboard.

@@ -1,10 +1,10 @@
 # JobRadar Engineer
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
-![Tests](https://img.shields.io/badge/Tests-passing-brightgreen)
+[![CI](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/Jean-Carlosms/jobradar-engineer/actions/workflows/ci.yml)
 ![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-red)
 ![SQLite](https://img.shields.io/badge/SQLite-local-lightgrey)
-![Status](https://img.shields.io/badge/Status-v1.0.0-success)
+![Status](https://img.shields.io/badge/Status-v1.2.0-success)
 
 ## Visao geral
 
@@ -12,7 +12,7 @@ JobRadar Engineer e um robo local em Python para buscar, pontuar, analisar e vis
 
 O projeto foi preparado para uso local e apresentacao em portfolio, com dados ficticios, dashboard Streamlit, testes automatizados e cuidados para nao versionar informacoes sensiveis.
 
-Status atual: `v1.0.0 - Primeira versao completa`.
+Status atual: `v1.2.0 - Feedback insights e calibracao assistida`.
 
 ## Problema
 
@@ -134,6 +134,13 @@ Exportar feedback humano:
 python -m src.main --export-review-feedback
 ```
 
+Gerar insights assistivos a partir do feedback humano:
+
+```bat
+python -m src.main --feedback-insights
+python -m src.main --feedback-insights --feedback-insights-min-reviewed 5
+```
+
 Auditar pre-filtro:
 
 ```bat
@@ -144,6 +151,20 @@ Rodar testes:
 
 ```bat
 python -m pytest
+```
+
+Rodar validacoes de qualidade locais:
+
+```bat
+python scripts\check_publication_safety.py
+python -m ruff check .
+python -m pytest
+```
+
+Para instalar dependencias de desenvolvimento:
+
+```bat
+python -m pip install -r requirements-dev.txt
 ```
 
 ## Como rodar com dados ficticios
@@ -405,6 +426,31 @@ reports/job_review_feedback_YYYYMMDD_HHMMSS.csv
 
 Use esse feedback para calibrar `config/profile_keywords.yaml`: vagas relevantes indicam bons termos positivos, vagas irrelevantes e notas recorrentes ajudam a criar termos negativos ou ajustar pesos.
 
+### Insights de feedback
+
+Depois de revisar vagas no dashboard, gere um relatorio assistivo:
+
+```bat
+python -m src.main --feedback-insights
+```
+
+Com minimo de revisoes esperado:
+
+```bat
+python -m src.main --feedback-insights --feedback-insights-min-reviewed 5
+```
+
+Isso cria:
+
+```text
+reports/feedback_insights_YYYYMMDD_HHMMSS.md
+reports/feedback_insights_YYYYMMDD_HHMMSS.csv
+```
+
+O relatorio sugere termos candidatos a positivos e negativos, empresas para priorizar, empresas com ruido, titulos recorrentes, localidades relevantes, possiveis falsos positivos, possiveis falsos negativos e vagas favoritas. As sugestoes sao assistivas: o sistema nao altera `config/profile_keywords.yaml` automaticamente.
+
+Use o Markdown para decidir ajustes manuais em `high_weight_keywords`, `medium_weight_keywords`, `negative_keywords`, listas tecnicas/negativas do pre-filtro, `priority_companies` e `location_boost_keywords`. Se houver poucas vagas revisadas, o relatorio ainda e gerado, mas marca baixa confianca.
+
 ## Agendamento no Windows
 
 Teste controlado sem envio real:
@@ -494,15 +540,18 @@ Antes de publicar, rode:
 
 ```bat
 python scripts\check_publication_safety.py
+python -m ruff check .
 python -m pytest
 ```
 
 ## Status do projeto
 
-Versao atual: `v1.0.0 - Primeira versao completa`.
+Versao atual: `v1.2.0 - Feedback insights e calibracao assistida`.
 
 Testes:
 
 ```bat
+python scripts\check_publication_safety.py
+python -m ruff check .
 python -m pytest
 ```

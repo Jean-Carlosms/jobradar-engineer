@@ -2,7 +2,7 @@
 
 ## Nome do projeto
 
-JobRadar Engineer v1.0.0.
+JobRadar Engineer v1.2.0.
 
 ## Problema resolvido
 
@@ -12,9 +12,9 @@ Buscar vagas aderentes a um perfil tecnico de engenharia consome tempo, exige co
 
 Um robo local em Python que coleta vagas publicas, calcula aderencia ao perfil, remove duplicatas, salva em SQLite, analisa vaga x perfil, envia relatorios por e-mail, permite revisao humana e apresenta tudo em um dashboard Streamlit.
 
-## Status v1.0.0
+## Status v1.2.0
 
-Primeira versao completa para portfolio e publicacao segura. O projeto cobre o fluxo local de ponta a ponta: configuracao do perfil, coleta, ranking, auditoria, revisao humana, visualizacao e operacao no Windows.
+Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada e calibracao assistida por feedback humano. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
 
 ## Pipeline final
 
@@ -42,6 +42,7 @@ Primeira versao completa para portfolio e publicacao segura. O projeto cobre o f
 - E-mail com melhores vagas e sugestao de mensagem ao recrutador.
 - Dashboard com filtros, graficos, exportacao CSV, auditoria e revisao humana.
 - Feedback manual com status, favoritos e notas.
+- Insights assistivos para calibrar o perfil sem alterar YAML automaticamente.
 - Scripts Windows para dry-run, producao e dashboard.
 - Banco ficticio para portfolio.
 
@@ -67,7 +68,7 @@ Python, SQLAlchemy, SQLite, Requests, BeautifulSoup, PyYAML, Pandas, Streamlit, 
 
 ## Resultados alcancados
 
-- Versao v1.0.0 executavel com testes automatizados.
+- Versao v1.2.0 executavel com testes automatizados, CI no GitHub Actions e insights de feedback.
 - Dashboard local para tomada de decisao.
 - Fluxo de e-mail e agendamento Windows.
 - Projeto preparado para GitHub sem dados sensiveis.

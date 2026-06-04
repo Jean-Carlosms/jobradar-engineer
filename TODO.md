@@ -204,14 +204,51 @@
 
 ## Roadmap pos-v1.0
 
+### Fase 16A - GitHub Actions CI e qualidade automatizada
+
+- [x] Criar `.github/workflows/ci.yml`.
+- [x] Configurar workflow para Ubuntu e Windows.
+- [x] Usar Python 3.11.
+- [x] Instalar dependencias com `pip install -r requirements.txt`.
+- [x] Separar dependencias de desenvolvimento em `requirements-dev.txt`.
+- [x] Rodar `python -m ruff check .`.
+- [x] Rodar `python scripts/check_publication_safety.py`.
+- [x] Rodar `python -m pytest`.
+- [x] Atualizar README com badge real do GitHub Actions.
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.1.0 - CI e qualidade automatizada`.
+- [x] Adicionar testes para garantir que o workflow existe e roda os comandos obrigatorios.
+
+### Fase 16B - Sugestoes de ajuste baseadas em feedback humano
+
+- [x] Criar `src/services/feedback_insights.py`.
+- [x] Ler vagas revisadas no SQLite e gerar insights por status, termos, empresas, titulos, localidades, falsos positivos, falsos negativos e favoritas.
+- [x] Criar relatorio Markdown `reports/feedback_insights_YYYYMMDD_HHMMSS.md`.
+- [x] Criar relatorio CSV `reports/feedback_insights_YYYYMMDD_HHMMSS.csv`.
+- [x] Adicionar colunas `insight_type`, `candidate`, `count`, `evidence`, `recommendation` e `confidence`.
+- [x] Adicionar CLI `--feedback-insights`.
+- [x] Adicionar CLI `--feedback-insights-min-reviewed`.
+- [x] Gerar relatorio mesmo com poucas revisoes e aviso de baixa confianca.
+- [x] Adicionar secao opcional `Insights de Feedback` no dashboard.
+- [x] Adicionar testes de servico, Markdown, CSV e CLI.
+- [x] Atualizar README com fluxo de calibracao assistida.
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.2.0 - Feedback insights e calibracao assistida`.
+- [x] Garantir que `profile_keywords.yaml` nao e alterado automaticamente.
+
 ### Fase 16 - Ajustes automaticos ou semi-automaticos de pesos
 
 - [ ] Gerar sugestoes de novos termos positivos e negativos a partir da auditoria.
-- [ ] Usar feedback humano para sugerir ajustes de pesos.
+- [x] Usar feedback humano para sugerir ajustes de pesos.
 - [ ] Criar modo interativo para marcar falso positivo/falso negativo.
 - [ ] Gerar patch sugerido para `profile_keywords.yaml`.
 - [ ] Comparar impacto antes/depois do ajuste em uma amostra fixa.
 - [ ] Criar metricas de precisao manual por rodada.
+
+### Proximas fases sugeridas
+
+- [ ] Aplicar sugestoes manualmente em `profile_keywords.yaml` e comparar resultados.
+- [ ] Melhorar schema/migracoes do SQLite.
+- [ ] Adicionar mais fontes ou APIs publicas oficiais.
+- [ ] Melhorar dashboard com pagina de detalhes da vaga.
 
 ### Fase 17 - Enriquecimento por prioridade e dashboard
 
@@ -254,6 +291,6 @@
 - [ ] Logs rotativos em arquivo.
 - [ ] Alertas de falha por fonte.
 - [ ] Container Docker opcional.
-- [ ] Pipeline de CI com pytest.
-- [ ] Adicionar CI GitHub Actions.
+- [x] Pipeline de CI com pytest.
+- [x] Adicionar CI GitHub Actions.
 - [ ] Criar release v1.0.0.

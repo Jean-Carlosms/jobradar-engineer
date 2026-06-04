@@ -11,6 +11,7 @@ from src.profile import ProfileConfig, load_profile
 from src.profile_summary import ProfileSummary, load_profile_summary
 from src.services.deduplicator import deduplicate_jobs
 from src.services.email_sender import EmailSender
+from src.services.feedback_insights import FeedbackInsightsService
 from src.services.job_profile_analyzer import JobProfileAnalyzer
 from src.services.job_review_service import JobReviewService
 from src.services.matcher import JobMatcher
@@ -171,6 +172,30 @@ def run_export_review_feedback(settings: Settings | None = None):
     return result
 
 
+def run_feedback_insights(settings: Settings | None = None, min_reviewed: int = 5):
+    settings = settings or load_settings()
+    setup_logging()
+    repository = JobRepository(settings)
+    repository.init_db()
+    service = FeedbackInsightsService(repository)
+    result = service.generate(settings.project_root / "reports", min_reviewed=min_reviewed)
+    logger.info(
+        "Insights de feedback gerados: markdown=%s csv=%s revisadas=%s baixa_confianca=%s",
+        result.markdown_path,
+        result.csv_path,
+        result.reviewed_count,
+        result.low_confidence,
+    )
+    print(
+        "Insights de feedback gerados: "
+        f"{result.markdown_path} e {result.csv_path} "
+        f"({result.reviewed_count} vaga(s) revisada(s))"
+    )
+    if result.low_confidence:
+        print("Aviso: baixa confianca por poucas vagas revisadas.")
+    return result
+
+
 def build_sources(
     settings: Settings,
     source: str,
@@ -231,6 +256,13 @@ def main() -> None:
     parser.add_argument("--audit-input", default=None, help="CSV de pre-filtro especifico para auditar.")
     parser.add_argument("--review-summary", action="store_true", help="Mostra resumo do feedback humano salvo no banco.")
     parser.add_argument("--export-review-feedback", action="store_true", help="Exporta feedback humano para CSV em reports/.")
+    parser.add_argument("--feedback-insights", action="store_true", help="Gera insights assistivos a partir do feedback humano.")
+    parser.add_argument(
+        "--feedback-insights-min-reviewed",
+        type=int,
+        default=5,
+        help="Minimo de vagas revisadas para reduzir o aviso de baixa confianca.",
+    )
     args = parser.parse_args()
 
     settings = load_settings()
@@ -246,6 +278,8 @@ def main() -> None:
         run_review_summary(settings=settings)
     elif args.export_review_feedback:
         run_export_review_feedback(settings=settings)
+    elif args.feedback_insights:
+        run_feedback_insights(settings=settings, min_reviewed=args.feedback_insights_min_reviewed)
     elif args.audit_prefilter_only:
         run_prefilter_audit_only(settings=settings, audit_input=args.audit_input)
     elif args.analyze_only or (args.reanalyze and not args.analyze and not args.schedule):

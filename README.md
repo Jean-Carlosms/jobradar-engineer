@@ -4,13 +4,15 @@
 ![Tests](https://img.shields.io/badge/Tests-passing-brightgreen)
 ![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-red)
 ![SQLite](https://img.shields.io/badge/SQLite-local-lightgrey)
-![Status](https://img.shields.io/badge/Status-portfolio--ready-success)
+![Status](https://img.shields.io/badge/Status-v1.0.0-success)
 
 ## Visao geral
 
 JobRadar Engineer e um robo local em Python para buscar, pontuar, analisar e visualizar vagas publicas aderentes a um perfil de engenharia mecatronica, automacao industrial, dados industriais, Python, Power BI, CLP/PLC, robotica e Industria 4.0.
 
 O projeto foi preparado para uso local e apresentacao em portfolio, com dados ficticios, dashboard Streamlit, testes automatizados e cuidados para nao versionar informacoes sensiveis.
+
+Status atual: `v1.0.0 - Primeira versao completa`.
 
 ## Problema
 
@@ -20,9 +22,26 @@ Buscar vagas compativeis com um perfil tecnico exige consultar varias fontes, fi
 
 O sistema coleta vagas publicas, calcula score explicavel, remove duplicatas, salva em SQLite, gera analise vaga x perfil, envia relatorios por e-mail e exibe tudo em um dashboard local.
 
+## Pipeline final
+
+1. Carrega perfil e empresas-alvo a partir de YAML.
+2. Coleta vagas por fonte mock, busca publica ou Gupy publica.
+3. Deduplica vagas por URL e identidade.
+4. Aplica pre-filtro tecnico para reduzir ruido.
+5. Enriquece melhores vagas Gupy por pagina publica de detalhe.
+6. Calcula `match_score` explicavel.
+7. Persiste dados e migracoes simples em SQLite.
+8. Gera analise vaga x perfil com `fit_score`.
+9. Envia relatorio em dry-run ou SMTP.
+10. Exibe dashboard com filtros, graficos, auditoria e revisao humana.
+11. Exporta auditorias e feedbacks em CSV/Markdown.
+
 ## Funcionalidades
 
 - Fonte mock e busca publica por mecanismo de pesquisa.
+- Fonte Gupy publica dedicada com curadoria por empresa.
+- Pre-filtro tecnico e auditoria de relevancia.
+- Enriquecimento por pagina publica de detalhe.
 - Perfil profissional configuravel por YAML.
 - Score de aderencia com justificativa.
 - Deduplicacao por URL e por titulo + empresa + local.
@@ -30,6 +49,7 @@ O sistema coleta vagas publicas, calcula score explicavel, remove duplicatas, sa
 - Analise vaga x perfil/curriculo baseada em regras locais.
 - E-mail com melhores vagas e resumo de analise.
 - Dashboard Streamlit com filtros, graficos e exportacao CSV.
+- Revisao humana com status, favoritas e notas.
 - Scripts Windows para dry-run, producao e dashboard.
 - Banco ficticio para screenshots e portfolio.
 
@@ -62,22 +82,30 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
+No PowerShell, se necessario, use:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
 Configure o ambiente:
 
 ```bat
 copy .env.example .env
 ```
 
-Rodar coleta simulada com analise e sem envio real:
+## Principais comandos
+
+Coleta simulada com analise e sem envio real:
 
 ```bat
 python -m src.main --source mock --analyze --dry-run --min-score 50 --analysis-min-score 50
 ```
 
-Rodar fonte publica dedicada da Gupy:
+Gupy real em dry-run:
 
 ```bat
-python -m src.main --source gupy --analyze --dry-run --min-score 50 --analysis-min-score 50
+python -m src.main --source gupy --debug-search --analyze --dry-run --min-score 0 --analysis-min-score 0
 ```
 
 Diagnosticar busca publica:
@@ -94,7 +122,31 @@ Rodar busca completa com e-mail real, dependendo do `.env`:
 python -m src.main --source all --analyze --send-email --min-score 50 --analysis-min-score 50
 ```
 
-## Como rodar com dados de exemplo
+Resumo de revisao humana:
+
+```bat
+python -m src.main --review-summary
+```
+
+Exportar feedback humano:
+
+```bat
+python -m src.main --export-review-feedback
+```
+
+Auditar pre-filtro:
+
+```bat
+python -m src.main --audit-prefilter-only --audit-input logs/gupy_debug/prefilter_YYYYMMDD_HHMMSS.csv
+```
+
+Rodar testes:
+
+```bat
+python -m pytest
+```
+
+## Como rodar com dados ficticios
 
 Os dados de exemplo sao ficticios e seguros para portfolio.
 
@@ -109,6 +161,22 @@ data/sample_jobs.db
 ```
 
 Esse banco nao sobrescreve `data/jobs.db`.
+
+Abra o dashboard e selecione `Dados ficticios` na barra lateral:
+
+```bat
+streamlit run dashboard.py
+```
+
+Use esse modo para screenshots e portfolio publico.
+
+## Como rodar com Gupy real
+
+```bat
+python -m src.main --source gupy --debug-search --analyze --dry-run --min-score 0 --analysis-min-score 0
+```
+
+Esse comando consulta apenas paginas publicas configuradas em `config/gupy_companies.yaml`, nao faz login, nao automatiza candidatura e nao tenta contornar captcha ou bloqueios.
 
 ## Fonte Gupy publica
 
@@ -273,6 +341,17 @@ Abrir dashboard:
 streamlit run dashboard.py
 ```
 
+## Como revisar vagas no dashboard
+
+1. Rode uma coleta real ou carregue dados ficticios.
+2. Abra `streamlit run dashboard.py`.
+3. Use os filtros laterais para escolher fonte, empresa, score, status e favoritas.
+4. Na secao `Revisao Humana`, selecione a vaga.
+5. Marque status: `relevant`, `irrelevant`, `maybe`, `applied` ou `ignored`.
+6. Marque favorita quando fizer sentido.
+7. Escreva observacoes para calibrar o YAML depois.
+8. Use `python -m src.main --export-review-feedback` para gerar CSV em `reports/`.
+
 Ou:
 
 ```bat
@@ -353,7 +432,7 @@ Documentacao:
 - Nao ignora bloqueios de acesso.
 - Usa apenas dados publicos de vagas.
 - Nao coleta dados sensiveis.
-- `.env`, `.venv/`, `logs/` e `data/jobs.db` nao devem ser versionados.
+- `.env`, `.venv/`, `data/jobs.db`, `logs/` e `reports/` nao devem ser versionados.
 - Prints publicos devem usar dados ficticios ou sanitizados.
 
 Veja tambem:
@@ -420,7 +499,7 @@ python -m pytest
 
 ## Status do projeto
 
-Versao atual: `v0.7.0 - Release e publicacao segura`.
+Versao atual: `v1.0.0 - Primeira versao completa`.
 
 Testes:
 

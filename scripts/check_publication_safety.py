@@ -9,6 +9,8 @@ EXPECTED_GITIGNORE_PATTERNS = [
     ".env",
     ".venv/",
     "logs/",
+    "reports/*",
+    "!reports/.gitkeep",
     "data/jobs.db",
 ]
 
@@ -20,12 +22,14 @@ REQUIRED_FILES = [
     "LICENSE",
     "PORTFOLIO_SUMMARY.md",
     "RELEASE_NOTES.md",
+    "reports/.gitkeep",
 ]
 
 LOCAL_SENSITIVE_PATHS = [
     ".env",
     "data/jobs.db",
     "logs",
+    "reports",
     ".venv",
 ]
 

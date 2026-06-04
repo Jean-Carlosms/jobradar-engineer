@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.0.0 - Primeira versao completa
+
+- Consolidado pipeline completo: coleta, deduplicacao, pre-filtro tecnico, enriquecimento Gupy, score explicavel, analise vaga x perfil, e-mail e dashboard.
+- Adicionada fonte Gupy publica dedicada com empresas categorizadas, debug por empresa e relatorio de status.
+- Adicionado enriquecimento de detalhes por pagina publica da Gupy, com limite, timeout e rate limit.
+- Adicionado pre-filtro tecnico para reduzir ruido antes do enriquecimento.
+- Adicionada auditoria do pre-filtro com relatorios Markdown e CSV em `reports/`.
+- Adicionada revisao humana no dashboard, com status, favoritos, notas, resumo e exportacao de feedback.
+- Atualizados comandos CLI para auditoria, resumo de feedback e exportacao.
+- Reforcada publicacao segura: `.env`, `.venv/`, `data/jobs.db`, `logs/` e `reports/` fora do versionamento.
+- Projeto consolidado para portfolio e publicacao como primeira versao completa.
+
 ## v0.7.0 - Release e publicacao segura
 
 - Adicionado checklist final de publicacao.

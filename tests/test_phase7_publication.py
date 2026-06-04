@@ -50,3 +50,24 @@ def test_phase7_docs_do_not_contain_real_secret_patterns():
         content = path.read_text(encoding="utf-8")
         for pattern in forbidden_patterns:
             assert not pattern.search(content), f"Potential secret-like pattern in {path}: {pattern.pattern}"
+
+
+def test_release_docs_reference_v1():
+    release_notes = (ROOT / "RELEASE_NOTES.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    checklist = (ROOT / "docs" / "PUBLISHING_CHECKLIST.md").read_text(encoding="utf-8")
+    portfolio = (ROOT / "PORTFOLIO_SUMMARY.md").read_text(encoding="utf-8")
+
+    assert "v1.0.0 - Primeira versao completa" in release_notes
+    assert "Status atual: `v1.0.0 - Primeira versao completa`" in readme
+    assert "Publishing Checklist v1.0.0" in checklist
+    assert "JobRadar Engineer v1.0.0" in portfolio
+
+
+def test_publication_docs_warn_about_runtime_paths():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    checklist = (ROOT / "docs" / "PUBLISHING_CHECKLIST.md").read_text(encoding="utf-8")
+
+    for protected_path in [".env", ".venv/", "data/jobs.db", "logs/", "reports/"]:
+        assert protected_path in readme
+        assert protected_path in checklist

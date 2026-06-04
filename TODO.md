@@ -189,7 +189,22 @@
 - [x] Adicionar metricas e filtros de revisao no dashboard.
 - [x] Adicionar testes de migracao, servico, resumo, exportacao e CLI.
 
-## Fase 15 - Ajustes automaticos ou semi-automaticos de pesos
+## Fase 15 - Consolidacao para release v1.0.0
+
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.0.0 - Primeira versao completa`.
+- [x] Atualizar `PORTFOLIO_SUMMARY.md` com pipeline final e status v1.0.0.
+- [x] Atualizar `README.md` com status v1.0.0, pipeline final e comandos principais.
+- [x] Documentar dados ficticios, Gupy real e revisao humana no dashboard.
+- [x] Reforcar que `.env`, `.venv/`, `data/jobs.db`, `logs/` e `reports/` nao sao versionados.
+- [x] Atualizar `docs/PUBLISHING_CHECKLIST.md` para v1.0.0.
+- [x] Atualizar `docs/LINKEDIN_POST.md` com versao final do post.
+- [x] Atualizar `docs/INTERVIEW_PITCH.md` com pitch v1.0.0.
+- [x] Atualizar `scripts/check_publication_safety.py` para verificar `reports/`.
+- [x] Validar safety check e testes automatizados.
+
+## Roadmap pos-v1.0
+
+### Fase 16 - Ajustes automaticos ou semi-automaticos de pesos
 
 - [ ] Gerar sugestoes de novos termos positivos e negativos a partir da auditoria.
 - [ ] Usar feedback humano para sugerir ajustes de pesos.
@@ -198,7 +213,7 @@
 - [ ] Comparar impacto antes/depois do ajuste em uma amostra fixa.
 - [ ] Criar metricas de precisao manual por rodada.
 
-## Fase 16 - Enriquecimento por prioridade e dashboard
+### Fase 17 - Enriquecimento por prioridade e dashboard
 
 - [ ] Ajustar dashboard para analisar funil Gupy por empresa e pre-filtro.
 - [ ] Criar filtros por `prefilter_score`.
@@ -206,7 +221,7 @@
 - [ ] Criar pagina de detalhes da vaga no dashboard.
 - [ ] Adicionar controle manual de favoritos/bloqueios.
 
-## Fase 17 - API de busca opcional e sugestoes de slugs
+### Fase 18 - API de busca opcional e sugestoes de slugs
 
 - [ ] Avaliar SerpAPI, Bing Search API ou Google Custom Search API.
 - [ ] Gerar sugestoes automaticas de slugs Gupy a partir de empresas-alvo.
@@ -214,7 +229,7 @@
 - [ ] Marcar automaticamente status observado em relatorio separado.
 - [ ] Priorizar empresas com vagas tecnicas reais nos ultimos dias.
 
-## Fase 18 - Qualidade das fontes
+### Fase 19 - Qualidade das fontes
 
 - [ ] Adicionar clientes para APIs publicas oficiais quando disponiveis.
 - [ ] Melhorar coleta Gupy.
@@ -225,7 +240,7 @@
 - [ ] Adicionar cache de consultas.
 - [ ] Separar resultados de busca por fonte de forma mais precisa.
 
-## Fase 19 - Produto local
+### Fase 20 - Produto local
 
 - [ ] Adicionar pagina de detalhes da vaga no dashboard.
 - [ ] Exportacao Excel.
@@ -234,7 +249,7 @@
 - [ ] Editor local do perfil YAML pelo dashboard.
 - [ ] Adicionar screenshots reais sanitizados.
 
-## Fase 20 - Operacao
+### Fase 21 - Operacao
 
 - [ ] Logs rotativos em arquivo.
 - [ ] Alertas de falha por fonte.

@@ -1,26 +1,30 @@
 # LinkedIn Post
 
-Depois de algumas iteracoes, preparei um projeto de portfolio chamado JobRadar Engineer.
+Conclui a versao v1.0.0 do JobRadar Engineer, um projeto de portfolio que transforma uma dor real em um produto local completo: encontrar, filtrar, analisar e revisar vagas publicas aderentes a um perfil tecnico de engenharia, automacao e dados.
 
-A ideia nasceu de uma dor bem pratica: buscar vagas compativeis com um perfil tecnico de engenharia, automacao industrial e dados costuma exigir muita triagem manual. As vagas ficam espalhadas em varias fontes, os requisitos variam bastante e nem sempre e facil perceber rapidamente quais oportunidades realmente combinam com o perfil.
+A ideia nasceu de um problema pratico. Buscar vagas boas manualmente consome tempo, gera muito ruido e dificulta comparar requisitos, localidades, empresas e aderencia ao perfil.
 
-Para resolver isso, desenvolvi um robo local em Python que:
+O JobRadar Engineer resolve esse fluxo com Python:
 
-- busca vagas publicas de forma controlada;
-- calcula um score de aderencia com base em um perfil configuravel em YAML;
-- remove duplicatas;
-- salva os resultados em SQLite;
-- gera uma analise vaga x perfil baseada em regras locais;
-- envia um resumo por e-mail;
-- exibe tudo em um dashboard Streamlit;
-- permite usar dados ficticios para demonstracao publica.
+- coleta vagas publicas de forma controlada;
+- usa fonte mock para testes e screenshots seguros;
+- consulta paginas publicas da Gupy configuradas por empresa;
+- aplica pre-filtro tecnico para reduzir ruido;
+- enriquece vagas por pagina publica de detalhe;
+- calcula score de aderencia explicavel;
+- gera analise vaga x perfil baseada em regras locais;
+- salva tudo em SQLite;
+- envia resumo por e-mail em dry-run ou SMTP configurado;
+- exibe dashboard Streamlit com filtros, graficos e exportacao;
+- permite revisao humana com status, favoritas e notas;
+- gera auditorias e feedbacks para calibrar o perfil.
 
 Tecnologias usadas:
 
 Python, SQLAlchemy, SQLite, Requests, BeautifulSoup, PyYAML, Pandas, Streamlit, APScheduler, pytest e scripts para Windows Task Scheduler.
 
-Um ponto importante do projeto foi o cuidado com compliance: ele nao automatiza login, nao se candidata automaticamente, nao tenta contornar captcha ou bloqueios e trabalha apenas com dados publicos. Tambem preparei o repositorio para GitHub sem versionar `.env`, bancos reais ou logs reais.
+Um ponto central foi compliance e seguranca: o projeto nao faz login, nao automatiza candidatura, nao tenta contornar captcha ou bloqueios e trabalha apenas com dados publicos. Tambem foi preparado para GitHub sem versionar `.env`, banco real, logs ou relatorios locais.
 
-O aprendizado tecnico mais interessante foi estruturar o projeto em fases: MVP, score explicavel, dashboard, analise vaga x perfil, agendamento no Windows e preparacao segura para portfolio. Isso ajudou a manter o sistema funcional enquanto novas camadas eram adicionadas.
+O aprendizado mais valioso foi evoluir o produto em fases sem quebrar o MVP: coleta, scoring, dashboard, analise, agendamento, fonte Gupy, pre-filtro, auditoria, revisao humana e consolidacao para release.
 
-Feedbacks sao muito bem-vindos, especialmente sobre melhorias de arquitetura, fontes publicas de vagas e formas de deixar a analise de aderencia mais precisa sem depender de dados sensiveis.
+Feedbacks sao bem-vindos, especialmente sobre arquitetura, curadoria de fontes publicas e formas de melhorar a relevancia do ranking mantendo seguranca e transparencia.

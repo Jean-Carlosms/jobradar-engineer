@@ -12,6 +12,7 @@ def test_phase6_documentation_files_exist():
         ROOT / "RELEASE_NOTES.md",
         ROOT / "SECURITY.md",
         ROOT / "LICENSE",
+        ROOT / "reports" / ".gitkeep",
         ROOT / "docs" / "images" / ".gitkeep",
     ]
 
@@ -62,6 +63,8 @@ def test_gitignore_keeps_sensitive_files_out_and_allows_sample_db():
     assert ".env" in gitignore
     assert ".venv/" in gitignore
     assert "logs/" in gitignore
+    assert "reports/*" in gitignore
+    assert "!reports/.gitkeep" in gitignore
     assert "data/jobs.db" in gitignore
     assert "!data/sample_jobs.db" in gitignore
     assert "!data/.gitkeep" in gitignore
@@ -77,7 +80,7 @@ def test_readme_contains_professional_sections():
         "## Arquitetura",
         "## Tecnologias",
         "## Como rodar",
-        "## Como rodar com dados de exemplo",
+        "## Como rodar com dados ficticios",
         "## Dashboard",
         "## Agendamento no Windows",
         "## Seguranca e compliance",

@@ -19,6 +19,8 @@ def make_dashboard_dataframe() -> pd.DataFrame:
                     "match_reason": "Alta aderencia por conter Python e CLP.",
                     "priority_company": True,
                     "query_used": "mock",
+                    "review_status": "relevant",
+                    "is_favorite": True,
                     "already_sent": True,
                 },
                 {
@@ -31,6 +33,8 @@ def make_dashboard_dataframe() -> pd.DataFrame:
                     "match_reason": "Aderencia media por conter planejamento.",
                     "priority_company": False,
                     "query_used": "site:infojobs.com.br",
+                    "review_status": "unreviewed",
+                    "is_favorite": False,
                     "already_sent": False,
                 },
             ]
@@ -46,6 +50,9 @@ def test_calculate_metrics_for_dashboard_dataframe():
     assert metrics["unsent_jobs"] == 1
     assert metrics["max_score"] == 88
     assert metrics["priority_companies"] == 1
+    assert metrics["reviewed_jobs"] == 1
+    assert metrics["relevant_jobs"] == 1
+    assert metrics["favorite_jobs"] == 1
 
 
 def test_filter_jobs_applies_score_status_priority_and_text():
@@ -67,8 +74,11 @@ def test_to_display_dataframe_uses_expected_columns():
     display = to_display_dataframe(make_dashboard_dataframe())
 
     assert "motivo de aderencia" in display.columns
+    assert "status revisao" in display.columns
+    assert "favorita" in display.columns
     assert "link" in display.columns
     assert display.iloc[0]["empresa prioritaria"] == "sim"
+    assert display.iloc[0]["favorita"] == "sim"
 
 
 def test_load_jobs_reads_sqlite_database(tmp_path):
@@ -87,6 +97,11 @@ def test_load_jobs_reads_sqlite_database(tmp_path):
                 match_reason TEXT,
                 priority_company BOOLEAN,
                 query_used TEXT,
+                review_status TEXT,
+                review_notes TEXT,
+                is_favorite BOOLEAN,
+                viewed_at TEXT,
+                reviewed_at TEXT,
                 already_sent BOOLEAN
             )
             """
@@ -95,9 +110,10 @@ def test_load_jobs_reads_sqlite_database(tmp_path):
             """
             INSERT INTO jobs (
                 title, company, location, source, url, match_score,
-                match_reason, priority_company, query_used, already_sent
+                match_reason, priority_company, query_used, review_status,
+                review_notes, is_favorite, viewed_at, reviewed_at, already_sent
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 "Automation Engineer",
@@ -109,6 +125,11 @@ def test_load_jobs_reads_sqlite_database(tmp_path):
                 "Alta aderencia por conter PLC.",
                 1,
                 "mock",
+                "maybe",
+                "Boa vaga.",
+                1,
+                "2026-05-31T10:00:00",
+                "2026-05-31T10:05:00",
                 0,
             ),
         )
@@ -118,3 +139,5 @@ def test_load_jobs_reads_sqlite_database(tmp_path):
     assert len(dataframe) == 1
     assert dataframe.iloc[0]["title"] == "Automation Engineer"
     assert bool(dataframe.iloc[0]["priority_company"]) is True
+    assert dataframe.iloc[0]["review_status"] == "maybe"
+    assert bool(dataframe.iloc[0]["is_favorite"]) is True

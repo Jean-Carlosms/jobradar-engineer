@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from src.models.job import JobListing
@@ -101,13 +102,17 @@ class JobMatcher:
             normalized_keyword = normalize_text(keyword)
             if not normalized_keyword or normalized_keyword in seen:
                 continue
-            if normalized_keyword in text:
+            if self._contains_keyword(text, normalized_keyword):
                 seen.add(normalized_keyword)
                 matches.append(keyword)
-                multiplier = self.title_multiplier if normalized_keyword in title else 1.0
+                multiplier = self.title_multiplier if self._contains_keyword(title, normalized_keyword) else 1.0
                 score += weight * multiplier
 
         return matches, score
+
+    def _contains_keyword(self, text: str, keyword: str) -> bool:
+        pattern = rf"(?<![a-z0-9]){re.escape(keyword)}(?![a-z0-9])"
+        return re.search(pattern, text) is not None
 
     def _is_priority_company(self, company: str) -> bool:
         normalized_company = normalize_text(company)

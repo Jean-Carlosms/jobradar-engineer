@@ -9,9 +9,14 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from src.config import Settings
+from src.database import JobRepository
+from src.services.job_review_service import REVIEW_STATUSES, JobReviewService
+
 
 DEFAULT_DB_PATH = Path("data/jobs.db")
 SAMPLE_DB_PATH = Path("data/sample_jobs.db")
+PREFILTER_DEBUG_DIR = Path("logs/gupy_debug")
 JOBS_TABLE = "jobs"
 ANALYSES_TABLE = "job_analyses"
 
@@ -29,6 +34,13 @@ RAW_COLUMNS = [
     "match_reason",
     "priority_company",
     "query_used",
+    "prefilter_score",
+    "prefilter_reason",
+    "review_status",
+    "review_notes",
+    "is_favorite",
+    "viewed_at",
+    "reviewed_at",
     "already_sent",
     "fit_level",
     "fit_score",
@@ -57,6 +69,11 @@ DISPLAY_COLUMNS = {
     "match_score": "score",
     "match_reason": "motivo de aderencia",
     "priority_company": "empresa prioritaria",
+    "prefilter_score": "score pre-filtro",
+    "prefilter_reason": "motivo pre-filtro",
+    "review_status": "status revisao",
+    "is_favorite": "favorita",
+    "viewed_at": "visualizada em",
     "already_sent": "enviada",
     "query_used": "query usada",
     "fit_level": "fit level",
@@ -96,8 +113,10 @@ def normalize_jobs_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
             dataframe[column] = _default_value_for(column)
 
     dataframe["match_score"] = pd.to_numeric(dataframe["match_score"], errors="coerce").fillna(0.0)
+    dataframe["prefilter_score"] = pd.to_numeric(dataframe["prefilter_score"], errors="coerce").fillna(0.0)
     dataframe["fit_score"] = pd.to_numeric(dataframe["fit_score"], errors="coerce").fillna(0).astype(int)
     dataframe["priority_company"] = dataframe["priority_company"].fillna(False).astype(bool)
+    dataframe["is_favorite"] = dataframe["is_favorite"].fillna(False).astype(bool)
     dataframe["already_sent"] = dataframe["already_sent"].fillna(False).astype(bool)
 
     text_columns = [
@@ -108,6 +127,11 @@ def normalize_jobs_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
         "url",
         "match_reason",
         "query_used",
+        "prefilter_reason",
+        "review_status",
+        "review_notes",
+        "viewed_at",
+        "reviewed_at",
         "fit_level",
         "matched_skills_json",
         "missing_skills_json",
@@ -137,7 +161,13 @@ def calculate_metrics(dataframe: pd.DataFrame) -> dict[str, Any]:
             "unsent_jobs": 0,
             "average_score": 0.0,
             "max_score": 0.0,
-            "priority_companies": 0,
+        "priority_companies": 0,
+        "reviewed_jobs": 0,
+        "relevant_jobs": 0,
+        "irrelevant_jobs": 0,
+        "maybe_jobs": 0,
+        "applied_jobs": 0,
+        "favorite_jobs": 0,
         }
 
     return {
@@ -147,6 +177,12 @@ def calculate_metrics(dataframe: pd.DataFrame) -> dict[str, Any]:
         "average_score": float(dataframe["match_score"].mean()),
         "max_score": float(dataframe["match_score"].max()),
         "priority_companies": int(dataframe["priority_company"].sum()),
+        "reviewed_jobs": int((dataframe["review_status"] != "unreviewed").sum()),
+        "relevant_jobs": int((dataframe["review_status"] == "relevant").sum()),
+        "irrelevant_jobs": int((dataframe["review_status"] == "irrelevant").sum()),
+        "maybe_jobs": int((dataframe["review_status"] == "maybe").sum()),
+        "applied_jobs": int((dataframe["review_status"] == "applied").sum()),
+        "favorite_jobs": int(dataframe["is_favorite"].sum()),
     }
 
 
@@ -158,6 +194,8 @@ def filter_jobs(
     location: str = "Todas",
     sent_status: str = "Todas",
     priority_only: bool = False,
+    review_status: str = "Todos",
+    favorite_only: bool = False,
     text_search: str = "",
 ) -> pd.DataFrame:
     filtered = dataframe.copy()
@@ -178,6 +216,10 @@ def filter_jobs(
         filtered = filtered[~filtered["already_sent"]]
     if priority_only:
         filtered = filtered[filtered["priority_company"]]
+    if review_status != "Todos":
+        filtered = filtered[filtered["review_status"] == review_status]
+    if favorite_only:
+        filtered = filtered[filtered["is_favorite"]]
     if text_search.strip():
         term = text_search.strip().casefold()
         search_area = (
@@ -200,7 +242,9 @@ def to_display_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
             working[column] = ""
     display = working[display_columns].rename(columns=DISPLAY_COLUMNS)
     display["score"] = display["score"].round(1)
+    display["score pre-filtro"] = display["score pre-filtro"].round(1)
     display["empresa prioritaria"] = display["empresa prioritaria"].map({True: "sim", False: "nao"})
+    display["favorita"] = display["favorita"].map({True: "sim", False: "nao"})
     display["enviada"] = display["enviada"].map({True: "sim", False: "nao"})
     return display
 
@@ -250,7 +294,7 @@ def _jobs_query(connection: sqlite3.Connection) -> str:
 def _job_select_columns(connection: sqlite3.Connection) -> list[str]:
     existing_columns = _table_columns(connection, JOBS_TABLE)
     select_columns = []
-    for column in RAW_COLUMNS[:14]:
+    for column in RAW_COLUMNS[:21]:
         if column in existing_columns:
             select_columns.append(f"j.{column}")
         else:
@@ -265,9 +309,9 @@ def _table_columns(connection: sqlite3.Connection, table_name: str) -> set[str]:
 
 
 def _sql_default_for(column: str) -> str:
-    if column == "match_score":
+    if column in {"match_score", "prefilter_score"}:
         return "0"
-    if column in {"priority_company", "already_sent"}:
+    if column in {"priority_company", "is_favorite", "already_sent"}:
         return "0"
     return "''"
 
@@ -283,10 +327,12 @@ def json_list_to_text(value: str) -> str:
 
 
 def _default_value_for(column: str) -> Any:
-    if column == "match_score":
+    if column in {"match_score", "prefilter_score"}:
         return 0.0
-    if column in {"priority_company", "already_sent"}:
+    if column in {"priority_company", "is_favorite", "already_sent"}:
         return False
+    if column == "review_status":
+        return "unreviewed"
     return ""
 
 
@@ -317,6 +363,13 @@ def run_dashboard() -> None:
     metric_columns[3].metric("Score medio", f"{metrics['average_score']:.1f}")
     metric_columns[4].metric("Maior score", f"{metrics['max_score']:.1f}")
     metric_columns[5].metric("Prioritarias", metrics["priority_companies"])
+    review_columns = st.columns(6)
+    review_columns[0].metric("Revisadas", metrics["reviewed_jobs"])
+    review_columns[1].metric("Relevantes", metrics["relevant_jobs"])
+    review_columns[2].metric("Irrelevantes", metrics["irrelevant_jobs"])
+    review_columns[3].metric("Talvez", metrics["maybe_jobs"])
+    review_columns[4].metric("Aplicadas", metrics["applied_jobs"])
+    review_columns[5].metric("Favoritas", metrics["favorite_jobs"])
 
     filtered = render_sidebar_filters(jobs)
 
@@ -359,8 +412,10 @@ def run_dashboard() -> None:
             column_config={"link": st.column_config.LinkColumn("link")},
         )
 
+    render_human_review_section(filtered, db_path)
     render_analysis_section(filtered)
     render_charts(filtered)
+    render_prefilter_audit_section()
 
 
 def select_database_path() -> Path:
@@ -390,6 +445,8 @@ def render_sidebar_filters(jobs: pd.DataFrame) -> pd.DataFrame:
     location = st.sidebar.selectbox("Localidade", _options(jobs, "location"))
     sent_status = st.sidebar.selectbox("Status de envio", ["Todas", "Enviadas", "Nao enviadas"])
     priority_only = st.sidebar.checkbox("Somente empresas prioritarias")
+    review_status = st.sidebar.selectbox("Status de revisao", ["Todos", *REVIEW_STATUSES])
+    favorite_only = st.sidebar.checkbox("Somente favoritas")
     text_search = st.sidebar.text_input("Buscar por titulo, empresa ou motivo")
 
     return filter_jobs(
@@ -400,6 +457,8 @@ def render_sidebar_filters(jobs: pd.DataFrame) -> pd.DataFrame:
         location=location,
         sent_status=sent_status,
         priority_only=priority_only,
+        review_status=review_status,
+        favorite_only=favorite_only,
         text_search=text_search,
     )
 
@@ -421,6 +480,150 @@ def render_charts(dataframe: pd.DataFrame) -> None:
 
         st.write("Vagas por empresa")
         st.bar_chart(dataframe["company"].value_counts().head(15))
+
+
+def load_latest_prefilter_debug(debug_dir: str | Path = PREFILTER_DEBUG_DIR) -> pd.DataFrame:
+    path = latest_prefilter_debug_path(debug_dir)
+    if path is None:
+        return pd.DataFrame()
+    try:
+        dataframe = pd.read_csv(path)
+    except (OSError, pd.errors.ParserError):
+        return pd.DataFrame()
+    if "prefilter_score" in dataframe.columns:
+        dataframe["prefilter_score"] = pd.to_numeric(dataframe["prefilter_score"], errors="coerce").fillna(0.0)
+    for column in ["should_keep", "should_enrich"]:
+        if column in dataframe.columns:
+            dataframe[column] = dataframe[column].astype(str).str.casefold().isin(["true", "1", "yes", "sim"])
+    return dataframe
+
+
+def latest_prefilter_debug_path(debug_dir: str | Path = PREFILTER_DEBUG_DIR) -> Path | None:
+    candidates = sorted(Path(debug_dir).glob("prefilter_*.csv"), key=lambda path: path.stat().st_mtime, reverse=True)
+    return candidates[0] if candidates else None
+
+
+def render_prefilter_audit_section() -> None:
+    st.subheader("Auditoria do Pre-filtro")
+    path = latest_prefilter_debug_path()
+    if path is None:
+        st.info("Nenhum CSV de pre-filtro encontrado. Rode a Gupy com `--debug-search`.")
+        return
+
+    data = load_latest_prefilter_debug()
+    if data.empty:
+        st.info("Nao foi possivel carregar o CSV de pre-filtro mais recente.")
+        return
+
+    kept = data[data["should_keep"]]
+    discarded = data[~data["should_keep"]]
+    st.caption(f"CSV: {path}")
+    left, middle, right = st.columns(3)
+    left.metric("Mantidas", len(kept))
+    middle.metric("Descartadas", len(discarded))
+    right.metric("Enriquecimento", int(data["should_enrich"].sum()) if "should_enrich" in data else 0)
+
+    st.write("Descartadas com maior score")
+    st.dataframe(
+        discarded.sort_values("prefilter_score", ascending=False).head(10),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.write("Mantidas com menor score")
+    st.dataframe(
+        kept.sort_values("prefilter_score", ascending=True).head(10),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    if "prefilter_reason" in discarded:
+        st.write("Principais motivos de descarte")
+        reasons = discarded["prefilter_reason"].fillna("").astype(str).map(_prefilter_reason_group).value_counts().head(10)
+        st.dataframe(reasons.rename_axis("motivo").reset_index(name="total"), use_container_width=True, hide_index=True)
+
+
+def _prefilter_reason_group(reason: str) -> str:
+    lowered = reason.casefold()
+    if "negativo forte" in lowered:
+        return "negativo forte"
+    if "sem sinais tecnicos" in lowered or "sem sinais técnicos" in lowered:
+        return "sem sinais tecnicos"
+    if "negativo fraco" in lowered:
+        return "negativo fraco"
+    return reason.split(":", 1)[0].strip() or "outros"
+
+
+def render_human_review_section(dataframe: pd.DataFrame, db_path: str | Path) -> None:
+    st.subheader("Revisao Humana")
+    if dataframe.empty:
+        st.info("Nenhuma vaga filtrada para revisar.")
+        return
+
+    sorted_jobs = dataframe.sort_values(["is_favorite", "match_score", "prefilter_score"], ascending=[False, False, False])
+    options = {
+        f"{row.title} | {row.company} | score {row.match_score:.1f} | id {row.id}": int(row.id)
+        for row in sorted_jobs.itertuples()
+    }
+    selected_label = st.selectbox("Selecionar vaga para revisar", list(options.keys()))
+    selected = dataframe[dataframe["id"] == options[selected_label]].iloc[0]
+
+    left, right = st.columns(2)
+    with left:
+        st.write(f"Titulo: {selected['title']}")
+        st.write(f"Empresa: {selected['company']}")
+        st.write(f"Local: {selected['location']}")
+        st.write(f"Link: {selected['url']}")
+    with right:
+        st.write(f"Match score: {selected['match_score']:.1f}")
+        st.write(f"Fit score: {selected['fit_score']}")
+        st.write(f"Pre-filtro: {selected['prefilter_score']:.1f}")
+        st.write(f"Status atual: {selected['review_status'] or 'unreviewed'}")
+
+    service = _review_service(db_path)
+    if st.button("Marcar como visualizada"):
+        service.mark_viewed(int(selected["id"]))
+        st.success("Vaga marcada como visualizada.")
+
+    current_status = selected["review_status"] if selected["review_status"] in REVIEW_STATUSES else "unreviewed"
+    with st.form("job_review_form"):
+        review_status = st.selectbox(
+            "Status",
+            REVIEW_STATUSES,
+            index=REVIEW_STATUSES.index(current_status),
+            format_func=_review_status_label,
+        )
+        is_favorite = st.checkbox("Favorita", value=bool(selected["is_favorite"]))
+        review_notes = st.text_area("Observacoes", value=selected["review_notes"] or "", height=100)
+        submitted = st.form_submit_button("Salvar feedback")
+
+    if submitted:
+        service.update_review(
+            int(selected["id"]),
+            review_status=review_status,
+            review_notes=review_notes,
+            is_favorite=is_favorite,
+        )
+        st.success("Feedback salvo no SQLite.")
+
+
+def _review_service(db_path: str | Path) -> JobReviewService:
+    settings = Settings(database_path=Path(db_path))
+    repository = JobRepository(settings)
+    repository.init_db()
+    return JobReviewService(repository)
+
+
+def _review_status_label(status: str) -> str:
+    labels = {
+        "unreviewed": "Nao revisada",
+        "relevant": "Relevante",
+        "irrelevant": "Irrelevante",
+        "maybe": "Talvez",
+        "applied": "Aplicada",
+        "ignored": "Ignorada",
+    }
+    return labels.get(status, status)
 
 
 def render_analysis_section(dataframe: pd.DataFrame) -> None:

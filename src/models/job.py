@@ -29,6 +29,13 @@ class JobListing:
     match_reason: str = ""
     priority_company: bool = False
     query_used: str = ""
+    prefilter_score: float = 0.0
+    prefilter_reason: str = ""
+    review_status: str = "unreviewed"
+    review_notes: str = ""
+    is_favorite: bool = False
+    viewed_at: datetime | None = None
+    reviewed_at: datetime | None = None
 
 
 class Job(Base):
@@ -48,6 +55,13 @@ class Job(Base):
     match_reason: Mapped[str] = mapped_column(Text, nullable=False, default="")
     priority_company: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     query_used: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    prefilter_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    prefilter_reason: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    review_status: Mapped[str] = mapped_column(String(30), nullable=False, default="unreviewed")
+    review_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    is_favorite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     already_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     analysis: Mapped["JobAnalysis | None"] = relationship(
         back_populates="job",

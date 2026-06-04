@@ -74,6 +74,20 @@ Rodar coleta simulada com analise e sem envio real:
 python -m src.main --source mock --analyze --dry-run --min-score 50 --analysis-min-score 50
 ```
 
+Rodar fonte publica dedicada da Gupy:
+
+```bat
+python -m src.main --source gupy --analyze --dry-run --min-score 50 --analysis-min-score 50
+```
+
+Diagnosticar busca publica:
+
+```bat
+python -m src.main --source search --debug-search --dry-run --min-score 0 --analysis-min-score 0
+```
+
+Com `--debug-search`, o sistema grava amostras sanitizadas em `logs/search_debug/`, incluindo HTML retornado e links extraidos.
+
 Rodar busca completa com e-mail real, dependendo do `.env`:
 
 ```bat
@@ -95,6 +109,161 @@ data/sample_jobs.db
 ```
 
 Esse banco nao sobrescreve `data/jobs.db`.
+
+## Fonte Gupy publica
+
+A fonte dedicada da Gupy reduz a dependencia de buscadores HTML. Configure empresas em:
+
+```text
+config/gupy_companies.yaml
+```
+
+Formato:
+
+```yaml
+categories:
+  education_research:
+    - name: Facens
+      slug: facens
+      base_url: https://facens.gupy.io
+      priority: true
+      status: active
+      notes: Board publico validado em execucao anterior.
+```
+
+O formato antigo tambem continua aceito:
+
+```yaml
+companies:
+  - name: Facens
+    slug: facens
+    base_url: https://facens.gupy.io
+```
+
+Campos opcionais por empresa:
+
+- `category`: agrupamento como `education_research`, `industry_manufacturing`, `technology_data`, `energy_infrastructure`, `consulting_engineering` ou `logistics_mobility`.
+- `priority`: indica empresas mais relevantes para o perfil ou para vagas tecnicas.
+- `status`: status configurado conhecido, como `active`, `invalid_slug` ou `unknown`.
+- `notes`: observacoes de curadoria.
+
+O status configurado nao substitui o teste real. A cada execucao, a fonte Gupy consulta as paginas publicas e registra o HTTP recebido. Um `404` pode indicar slug invalido, board inexistente, board privado, redirecionamento nao coberto ou empresa fora da Gupy publica.
+
+Comandos:
+
+```bat
+python -m src.main --source gupy --debug-search --dry-run --min-score 0 --analysis-min-score 0
+python -m src.main --source all --dry-run --min-score 50 --analysis-min-score 50
+python -m src.main --source all --include-mock-in-all --dry-run --min-score 50 --analysis-min-score 50
+```
+
+Comportamento das fontes:
+
+- `--source mock`: usa apenas dados ficticios de desenvolvimento.
+- `--source gupy`: usa apenas paginas publicas Gupy configuradas.
+- `--source search`: usa busca publica via mecanismo de pesquisa.
+- `--source all`: usa Gupy publica + BuscaPublica.
+- `--include-mock-in-all`: inclui mock tambem em `all`, somente quando solicitado.
+
+Com `--debug-search`, a fonte Gupy salva HTML sanitizado e links extraidos em `logs/gupy_debug/`.
+
+Com `--debug-search`, tambem e criado um relatorio por execucao:
+
+```text
+logs/gupy_debug/companies_status_YYYYMMDD_HHMMSS.csv
+```
+
+Esse CSV registra `name`, `slug`, `base_url`, `category`, `priority`, `status_http`, `jobs_found`, `jobs_created` e `error` para ajudar a curar slugs e priorizar empresas.
+
+### Pre-filtro tecnico Gupy
+
+Antes de abrir paginas de detalhe, a fonte Gupy aplica um pre-filtro rapido para reduzir ruido e custo de execucao. Ele usa titulo, empresa, localidade, URL, categoria da empresa, prioridade da empresa e texto basico da vaga.
+
+Configuracao em `config/profile_keywords.yaml`:
+
+```yaml
+technical_title_keywords:
+  - engenharia
+  - automacao
+  - Python
+strong_negative_title_keywords:
+  - estagio
+  - vendedor
+  - loja
+weak_negative_title_keywords:
+  - assistente
+  - auxiliar
+location_boost_keywords:
+  - Sorocaba
+  - Campinas
+priority_company_boost: 10
+```
+
+O pre-filtro gera:
+
+- `prefilter_score`: ranking rapido para decidir o que manter e enriquecer primeiro.
+- `prefilter_reason`: motivo textual da decisao.
+- `should_keep`: vagas sem sinais tecnicos suficientes ou com negativo forte podem ser descartadas.
+- `should_enrich`: vagas melhores sao priorizadas para abrir pagina de detalhe.
+
+Com `--debug-search`, tambem e criado:
+
+```text
+logs/gupy_debug/prefilter_YYYYMMDD_HHMMSS.csv
+```
+
+Auditar o pre-filtro apos uma coleta:
+
+```bat
+python -m src.main --source gupy --debug-search --dry-run --min-score 0 --analysis-min-score 0 --audit-prefilter
+```
+
+Auditar um CSV ja existente:
+
+```bat
+python -m src.main --audit-prefilter-only --audit-input logs/gupy_debug/prefilter_YYYYMMDD_HHMMSS.csv
+```
+
+A auditoria gera:
+
+```text
+reports/prefilter_audit_YYYYMMDD_HHMMSS.md
+reports/prefilter_audit_YYYYMMDD_HHMMSS.csv
+```
+
+Use o Markdown para revisar:
+
+- vagas mantidas com score baixo, possiveis falsos positivos;
+- vagas descartadas com score alto, possiveis falsos negativos;
+- vagas descartadas por negativo forte;
+- vagas descartadas por falta de termo tecnico;
+- empresas, localidades e motivos mais frequentes.
+
+Depois ajuste `config/profile_keywords.yaml`: adicione bons termos em `technical_title_keywords` ou `technical_area_keywords`, e termos ruins em `strong_negative_title_keywords` ou `weak_negative_title_keywords`.
+
+Diferença entre scores:
+
+- `prefilter_score`: usado antes do enriquecimento, para reduzir ruido e ordenar candidatas.
+- `match_score`: score principal de aderencia calculado com palavras-chave do perfil, usado no e-mail.
+- `fit_score`: analise vaga x perfil/curriculo, calculada depois que a vaga ja esta salva.
+
+### Enriquecimento de detalhes Gupy
+
+Por padrao, a fonte Gupy abre algumas paginas publicas de detalhe da vaga para melhorar a qualidade de `description_snippet`, localidade, requisitos, responsabilidades, beneficios e data de publicacao quando esses dados aparecem no HTML/JSON publico.
+
+Variaveis de ambiente:
+
+```env
+GUPY_ENRICH_DETAILS=true
+GUPY_MAX_DETAIL_PAGES=10
+GUPY_DETAIL_REQUEST_DELAY_SECONDS=1.5
+```
+
+- `GUPY_ENRICH_DETAILS`: ativa ou desativa abertura das paginas de detalhe.
+- `GUPY_MAX_DETAIL_PAGES`: limita quantas paginas de detalhe sao abertas por execucao.
+- `GUPY_DETAIL_REQUEST_DELAY_SECONDS`: intervalo entre requisicoes de detalhe.
+
+Abrir detalhes aumenta o tempo de execucao, mas melhora score, analise vaga x perfil e qualidade do e-mail. Se uma pagina de detalhe falhar, a vaga basica coletada pelo board e preservada.
 
 ## Dashboard
 
@@ -121,6 +290,41 @@ Tambem e possivel definir:
 set JOBRADAR_DASHBOARD_DB=data\sample_jobs.db
 streamlit run dashboard.py
 ```
+
+### Revisao humana
+
+O dashboard tem a secao `Revisao Humana` para registrar feedback manual sobre as vagas. Use essa etapa para separar o que realmente vale perseguir do que apenas passou pelas regras automaticas.
+
+Status disponiveis:
+
+- `unreviewed`: ainda nao revisada.
+- `relevant`: vaga relevante.
+- `irrelevant`: vaga irrelevante.
+- `maybe`: revisar depois.
+- `applied`: candidatura feita manualmente fora do JobRadar.
+- `ignored`: ignorada conscientemente.
+
+Na secao de revisao, selecione uma vaga, confira titulo, empresa, local, `match_score`, `fit_score`, `prefilter_score` e link. Depois salve status, favorita e observacoes. O dashboard tambem permite filtrar por status de revisao e somente favoritas.
+
+Resumo via CLI:
+
+```bat
+python -m src.main --review-summary
+```
+
+Exportar feedback:
+
+```bat
+python -m src.main --export-review-feedback
+```
+
+O CSV gerado fica em:
+
+```text
+reports/job_review_feedback_YYYYMMDD_HHMMSS.csv
+```
+
+Use esse feedback para calibrar `config/profile_keywords.yaml`: vagas relevantes indicam bons termos positivos, vagas irrelevantes e notas recorrentes ajudam a criar termos negativos ou ajustar pesos.
 
 ## Agendamento no Windows
 
@@ -159,8 +363,15 @@ Veja tambem:
 
 ## Limitacoes
 
+- A fonte Gupy publica consulta apenas paginas publicas configuradas em `config/gupy_companies.yaml`.
+- A fonte Gupy nao faz login, nao automatiza candidatura e nao tenta contornar captcha ou bloqueios.
+- O pre-filtro tecnico reduz ruido, mas ainda pode manter vagas amplas de tecnologia ou descartar casos ambiguos.
+- O enriquecimento Gupy abre paginas publicas de detalhe e respeita limite, timeout e delay configuraveis.
 - A busca publica depende de resultados de mecanismo de pesquisa.
 - Snippets podem ser incompletos e afetar score/analise.
+- Buscadores podem variar o HTML, limitar resultados, bloquear requisicoes ou retornar captcha.
+- Se a busca publica retornar 0 vagas, rode `--debug-search` para inspecionar status HTTP, tamanho do HTML, links encontrados e filtros aplicados.
+- Para maior robustez futura, considere SerpAPI, Bing Search API ou Google Custom Search API.
 - A analise vaga x perfil e baseada em regras locais, sem IA externa.
 - O dashboard nao coleta dados sozinho; ele apenas le SQLite.
 - Envio real depende do SMTP configurado no `.env`.
@@ -168,6 +379,7 @@ Veja tambem:
 ## Roadmap
 
 - Melhorar fontes com APIs publicas oficiais.
+- Melhorar coleta por empresa-alvo.
 - Adicionar cache de consultas.
 - Exportar Excel.
 - Criar favoritos, bloqueios e detalhes da vaga.

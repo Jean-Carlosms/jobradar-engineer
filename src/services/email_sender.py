@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import smtplib
+import ssl
 from email.message import EmailMessage
 from typing import Iterable, Sequence
 
@@ -45,18 +46,33 @@ class EmailSender:
         if self.settings.email_dry_run:
             logger.info("EMAIL_DRY_RUN ativo. E-mail gerado, mas nao enviado:\n%s", message.get_content())
             return True
+        if not self._has_smtp_credentials():
+            logger.error(
+                "Credenciais SMTP ausentes. Configure SMTP_USERNAME e SMTP_PASSWORD no .env antes de usar --send-email."
+            )
+            return False
 
-        if self.settings.smtp_use_tls:
-            smtp: smtplib.SMTP = smtplib.SMTP_SSL(self.settings.smtp_host, self.settings.smtp_port)
-        else:
-            smtp = smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port)
+        try:
+            with self._open_smtp_connection() as smtp:
+                if self.settings.smtp_use_tls and not self.settings.smtp_use_ssl:
+                    smtp.starttls()
+                if self.settings.smtp_username:
+                    smtp.login(self.settings.smtp_username, self.settings.smtp_password)
+                smtp.send_message(message)
+        except (OSError, smtplib.SMTPException, ssl.SSLError):
+            logger.exception("Falha ao enviar e-mail. Nenhuma vaga sera marcada como enviada.")
+            return False
 
-        with smtp:
-            if self.settings.smtp_username:
-                smtp.login(self.settings.smtp_username, self.settings.smtp_password)
-            smtp.send_message(message)
         logger.info("E-mail enviado para %s com %s vaga(s).", self.settings.email_to, len(selected_jobs))
         return True
+
+    def _has_smtp_credentials(self) -> bool:
+        return bool(self.settings.smtp_username and self.settings.smtp_password)
+
+    def _open_smtp_connection(self) -> smtplib.SMTP:
+        if self.settings.smtp_use_ssl:
+            return smtplib.SMTP_SSL(self.settings.smtp_host, self.settings.smtp_port)
+        return smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port)
 
     def select_jobs(
         self,
@@ -84,6 +100,7 @@ class EmailSender:
         for index, job in enumerate(jobs, start=1):
             priority_marker = "sim" if job.priority_company else "nao"
             analysis = getattr(job, "analysis", None)
+            prefilter_score = getattr(job, "prefilter_score", 0.0) or 0.0
             lines.extend(
                 [
                     f"{index}. {job.title}",
@@ -91,11 +108,15 @@ class EmailSender:
                     f"   Local: {job.location or 'Nao informado'}",
                     f"   Fonte: {job.source}",
                     f"   Score: {job.match_score:.1f}",
+                    f"   Pre-filtro: {prefilter_score:.1f}",
                     f"   Empresa prioritaria: {priority_marker}",
                     f"   Motivo: {job.match_reason or 'Score calculado por palavras-chave do perfil.'}",
-                    f"   Link: {job.url}",
                 ]
             )
+            prefilter_reason = getattr(job, "prefilter_reason", "")
+            if prefilter_reason:
+                lines.append(f"   Motivo pre-filtro: {prefilter_reason[:180]}")
+            lines.append(f"   Link: {job.url}")
             if analysis:
                 lines.extend(
                     [

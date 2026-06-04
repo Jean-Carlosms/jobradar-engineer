@@ -31,6 +31,8 @@ def test_gitignore_excludes_sensitive_runtime_files():
     assert ".env" in gitignore
     assert ".venv/" in gitignore
     assert "logs/" in gitignore
+    assert "reports/*" in gitignore
+    assert "!reports/.gitkeep" in gitignore
     assert "data/jobs.db" in gitignore
 
 

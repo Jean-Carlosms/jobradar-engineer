@@ -43,6 +43,13 @@ class JobRepository:
                         match_reason=listing.match_reason,
                         priority_company=listing.priority_company,
                         query_used=listing.query_used,
+                        prefilter_score=listing.prefilter_score,
+                        prefilter_reason=listing.prefilter_reason,
+                        review_status=listing.review_status,
+                        review_notes=listing.review_notes,
+                        is_favorite=listing.is_favorite,
+                        viewed_at=listing.viewed_at,
+                        reviewed_at=listing.reviewed_at,
                         already_sent=False,
                     )
                     session.add(job)
@@ -122,6 +129,9 @@ class JobRepository:
         return session.scalars(statement).first()
 
     def _update_existing(self, job: Job, listing: JobListing) -> None:
+        job.title = listing.title
+        job.company = listing.company
+        job.location = listing.location
         job.source = listing.source
         job.url = listing.url
         job.description_snippet = listing.description_snippet
@@ -131,6 +141,8 @@ class JobRepository:
         job.match_reason = listing.match_reason
         job.priority_company = listing.priority_company
         job.query_used = listing.query_used
+        job.prefilter_score = listing.prefilter_score
+        job.prefilter_reason = listing.prefilter_reason
 
     def _ensure_phase2_columns(self) -> None:
         inspector = inspect(self.engine)
@@ -139,6 +151,13 @@ class JobRepository:
             "match_reason": "ALTER TABLE jobs ADD COLUMN match_reason TEXT NOT NULL DEFAULT ''",
             "priority_company": "ALTER TABLE jobs ADD COLUMN priority_company BOOLEAN NOT NULL DEFAULT 0",
             "query_used": "ALTER TABLE jobs ADD COLUMN query_used TEXT NOT NULL DEFAULT ''",
+            "prefilter_score": "ALTER TABLE jobs ADD COLUMN prefilter_score FLOAT NOT NULL DEFAULT 0",
+            "prefilter_reason": "ALTER TABLE jobs ADD COLUMN prefilter_reason TEXT NOT NULL DEFAULT ''",
+            "review_status": "ALTER TABLE jobs ADD COLUMN review_status VARCHAR(30) NOT NULL DEFAULT 'unreviewed'",
+            "review_notes": "ALTER TABLE jobs ADD COLUMN review_notes TEXT NOT NULL DEFAULT ''",
+            "is_favorite": "ALTER TABLE jobs ADD COLUMN is_favorite BOOLEAN NOT NULL DEFAULT 0",
+            "viewed_at": "ALTER TABLE jobs ADD COLUMN viewed_at DATETIME",
+            "reviewed_at": "ALTER TABLE jobs ADD COLUMN reviewed_at DATETIME",
         }
 
         with self.engine.begin() as connection:

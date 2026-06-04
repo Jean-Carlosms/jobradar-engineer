@@ -3,6 +3,33 @@ from src.models.job import Job, JobAnalysis
 from src.services.email_sender import EmailSender
 
 
+class DummySMTP:
+    instances = []
+
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.started_tls = False
+        self.logged_in = False
+        self.sent = False
+        DummySMTP.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+    def starttls(self):
+        self.started_tls = True
+
+    def login(self, username, password):
+        self.logged_in = (username, password)
+
+    def send_message(self, message):
+        self.sent = True
+
+
 def make_job(title: str, score: float, already_sent: bool = False) -> Job:
     return Job(
         id=1,
@@ -62,3 +89,56 @@ def test_email_sender_includes_analysis_when_available(tmp_path):
     assert "Fit score: 86/100" in body
     assert "Aderencia alto" in body
     assert "Mensagem sugerida" in body
+
+
+def test_email_sender_uses_starttls_for_tls_mode(monkeypatch, tmp_path):
+    DummySMTP.instances = []
+    monkeypatch.setattr("smtplib.SMTP", DummySMTP)
+    settings = Settings(
+        database_path=tmp_path / "jobs.db",
+        email_dry_run=False,
+        smtp_use_tls=True,
+        smtp_use_ssl=False,
+        smtp_username="user",
+        smtp_password="pass",
+    )
+
+    assert EmailSender(settings).send_jobs([make_job("Alta", 90)], min_score=50, limit=10) is True
+
+    smtp = DummySMTP.instances[0]
+    assert smtp.started_tls is True
+    assert smtp.logged_in == ("user", "pass")
+    assert smtp.sent is True
+
+
+def test_email_sender_uses_ssl_without_starttls(monkeypatch, tmp_path):
+    DummySMTP.instances = []
+    monkeypatch.setattr("smtplib.SMTP_SSL", DummySMTP)
+    settings = Settings(
+        database_path=tmp_path / "jobs.db",
+        email_dry_run=False,
+        smtp_use_tls=False,
+        smtp_use_ssl=True,
+        smtp_username="user",
+        smtp_password="pass",
+    )
+
+    assert EmailSender(settings).send_jobs([make_job("Alta", 90)], min_score=50, limit=10) is True
+
+    smtp = DummySMTP.instances[0]
+    assert smtp.started_tls is False
+    assert smtp.sent is True
+
+
+def test_email_sender_requires_credentials_for_real_send(monkeypatch, tmp_path):
+    DummySMTP.instances = []
+    monkeypatch.setattr("smtplib.SMTP", DummySMTP)
+    settings = Settings(
+        database_path=tmp_path / "jobs.db",
+        email_dry_run=False,
+        smtp_username="",
+        smtp_password="",
+    )
+
+    assert EmailSender(settings).send_jobs([make_job("Alta", 90)], min_score=50, limit=10) is False
+    assert DummySMTP.instances == []

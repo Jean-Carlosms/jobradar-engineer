@@ -1,6 +1,8 @@
 .env
 .venv/
 logs/
+reports/*
+!reports/.gitkeep
 __pycache__/
 .pytest_cache/
 *.pyc

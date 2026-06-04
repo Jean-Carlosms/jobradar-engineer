@@ -51,3 +51,14 @@ def test_matcher_scores_medium_keywords():
 
     assert result.score > 0
     assert "Aderencia media" in result.reason_text
+
+
+def test_matcher_does_not_match_keyword_inside_common_words():
+    profile = ProfileConfig(high_weight_keywords=["ROS"])
+    result = JobMatcher(profile).score_text(
+        title="Produtor de Conteudo",
+        description="Criacao de cursos e apoio aos nossos alunos.",
+    )
+
+    assert result.score == 0
+    assert result.high_matches == []

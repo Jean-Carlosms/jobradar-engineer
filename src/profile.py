@@ -15,6 +15,12 @@ class ProfileConfig:
     medium_weight_keywords: list[str] = field(default_factory=list)
     negative_keywords: list[str] = field(default_factory=list)
     priority_companies: list[str] = field(default_factory=list)
+    technical_title_keywords: list[str] = field(default_factory=list)
+    technical_area_keywords: list[str] = field(default_factory=list)
+    strong_negative_title_keywords: list[str] = field(default_factory=list)
+    weak_negative_title_keywords: list[str] = field(default_factory=list)
+    location_boost_keywords: list[str] = field(default_factory=list)
+    priority_company_boost: float = 10.0
     min_score_to_email: float = 50.0
     max_email_jobs: int = 10
 
@@ -36,6 +42,12 @@ def _profile_from_mapping(raw: dict[str, Any]) -> ProfileConfig:
         medium_weight_keywords=_as_string_list(raw.get("medium_weight_keywords")),
         negative_keywords=_as_string_list(raw.get("negative_keywords")),
         priority_companies=_as_string_list(raw.get("priority_companies")),
+        technical_title_keywords=_as_string_list(raw.get("technical_title_keywords")),
+        technical_area_keywords=_as_string_list(raw.get("technical_area_keywords")),
+        strong_negative_title_keywords=_as_string_list(raw.get("strong_negative_title_keywords")),
+        weak_negative_title_keywords=_as_string_list(raw.get("weak_negative_title_keywords")),
+        location_boost_keywords=_as_string_list(raw.get("location_boost_keywords")),
+        priority_company_boost=float(raw.get("priority_company_boost", 10)),
         min_score_to_email=float(raw.get("min_score_to_email", 50)),
         max_email_jobs=int(raw.get("max_email_jobs", 10)),
     )

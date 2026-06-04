@@ -51,6 +51,9 @@ class Settings:
     profile_summary_path: Path = field(
         default_factory=lambda: Path(os.getenv("PROFILE_SUMMARY_PATH", "config/profile_summary.yaml"))
     )
+    gupy_companies_path: Path = field(
+        default_factory=lambda: Path(os.getenv("GUPY_COMPANIES_PATH", "config/gupy_companies.yaml"))
+    )
     search_terms: list[str] = field(
         default_factory=lambda: _split_env_list(os.getenv("SEARCH_TERMS"), DEFAULT_SEARCH_TERMS)
     )
@@ -65,6 +68,11 @@ class Settings:
     rate_limit_seconds: float = field(default_factory=lambda: float(os.getenv("RATE_LIMIT_SECONDS", "1.5")))
     max_search_queries: int = field(default_factory=lambda: int(os.getenv("MAX_SEARCH_QUERIES", "20")))
     enable_web_search: bool = field(default_factory=lambda: _bool_env("ENABLE_WEB_SEARCH", True))
+    gupy_enrich_details: bool = field(default_factory=lambda: _bool_env("GUPY_ENRICH_DETAILS", True))
+    gupy_max_detail_pages: int = field(default_factory=lambda: int(os.getenv("GUPY_MAX_DETAIL_PAGES", "10")))
+    gupy_detail_request_delay_seconds: float = field(
+        default_factory=lambda: float(os.getenv("GUPY_DETAIL_REQUEST_DELAY_SECONDS", "1.5"))
+    )
 
     email_dry_run: bool = field(default_factory=lambda: _bool_env("EMAIL_DRY_RUN", True))
     smtp_host: str = field(default_factory=lambda: os.getenv("SMTP_HOST", "localhost"))
@@ -72,6 +80,7 @@ class Settings:
     smtp_username: str = field(default_factory=lambda: os.getenv("SMTP_USERNAME", ""))
     smtp_password: str = field(default_factory=lambda: os.getenv("SMTP_PASSWORD", ""))
     smtp_use_tls: bool = field(default_factory=lambda: _bool_env("SMTP_USE_TLS", False))
+    smtp_use_ssl: bool = field(default_factory=lambda: _bool_env("SMTP_USE_SSL", False))
     email_from: str = field(default_factory=lambda: os.getenv("EMAIL_FROM", "jobradar@example.com"))
     email_to: str = field(default_factory=lambda: os.getenv("EMAIL_TO", "you@example.com"))
 
@@ -95,6 +104,12 @@ class Settings:
         if self.profile_summary_path.is_absolute():
             return self.profile_summary_path
         return self.project_root / self.profile_summary_path
+
+    @property
+    def resolved_gupy_companies_path(self) -> Path:
+        if self.gupy_companies_path.is_absolute():
+            return self.gupy_companies_path
+        return self.project_root / self.gupy_companies_path
 
 
 def load_settings(env_file: str | Path | None = None) -> Settings:

@@ -22,6 +22,7 @@ SMTP_PORT=587
 SMTP_USERNAME=
 SMTP_PASSWORD=
 SMTP_USE_TLS=true
+SMTP_USE_SSL=false
 EMAIL_FROM=
 EMAIL_TO=
 ```
@@ -51,14 +52,15 @@ Esse modo usa `--send-email`. Ele depende de SMTP configurado corretamente no `.
 Campos comuns:
 
 - `SMTP_HOST`: servidor SMTP do provedor.
-- `SMTP_PORT`: normalmente `587` para STARTTLS ou `465` para SSL.
+- `SMTP_PORT`: normalmente `587` para STARTTLS ou `465` para SSL direto.
 - `SMTP_USERNAME`: usuario/login do e-mail.
 - `SMTP_PASSWORD`: senha ou App Password.
-- `SMTP_USE_TLS`: `true` para SMTP SSL no codigo atual.
+- `SMTP_USE_TLS`: `true` para STARTTLS, normalmente com porta `587`.
+- `SMTP_USE_SSL`: `true` para SSL direto, normalmente com porta `465`.
 - `EMAIL_FROM`: remetente.
 - `EMAIL_TO`: destinatario.
 
-Observacao: o projeto atual usa `SMTP_SSL` quando `SMTP_USE_TLS=true` e `SMTP` simples quando `false`. Ajuste conforme o provedor usado.
+Use apenas um modo criptografico por vez. Para porta `587`, use `SMTP_USE_TLS=true` e `SMTP_USE_SSL=false`. Para porta `465`, use `SMTP_USE_TLS=false` e `SMTP_USE_SSL=true`.
 
 ## Gmail App Password
 
@@ -74,8 +76,18 @@ Valores comuns para Gmail:
 
 ```text
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
+SMTP_PORT=587
 SMTP_USE_TLS=true
+SMTP_USE_SSL=false
+```
+
+Alternativa Gmail com SSL direto:
+
+```text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USE_TLS=false
+SMTP_USE_SSL=true
 ```
 
 ## Testar antes de envio real

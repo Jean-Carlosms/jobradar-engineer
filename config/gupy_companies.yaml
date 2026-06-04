@@ -1,0 +1,108 @@
+categories:
+  education_research:
+    - name: Facens
+      slug: facens
+      base_url: https://facens.gupy.io
+      priority: true
+      status: active
+      notes: Board publico validado em execucao anterior; relevante para Sorocaba e tecnologia aplicada.
+
+  industry_manufacturing:
+    - name: Bosch
+      slug: bosch
+      base_url: https://bosch.gupy.io
+      priority: true
+      status: invalid_slug
+      notes: Retornou 404 em execucao anterior; manter para diagnostico ate encontrar slug valido.
+    - name: Toyota
+      slug: toyota
+      base_url: https://toyota.gupy.io
+      priority: true
+      status: invalid_slug
+      notes: Retornou 404 em execucao anterior; manter para diagnostico ate encontrar slug valido.
+    - name: Siemens
+      slug: siemens
+      base_url: https://siemens.gupy.io
+      priority: true
+      status: invalid_slug
+      notes: Retornou 404 em execucao anterior; manter para diagnostico ate encontrar slug valido.
+    - name: ZF
+      slug: zf
+      base_url: https://zf.gupy.io
+      priority: true
+      status: invalid_slug
+      notes: Retornou 404 em execucao anterior; manter para diagnostico ate encontrar slug valido.
+    - name: Cacau Show
+      slug: cacaushow
+      base_url: https://cacaushow.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para vagas de manufatura, processos, manutencao e operacoes.
+    - name: Raizen
+      slug: raizen
+      base_url: https://raizen.gupy.io
+      priority: true
+      status: unknown
+      notes: Candidata para energia, industria, automacao e engenharia.
+    - name: Ambev
+      slug: ambev
+      base_url: https://ambev.gupy.io
+      priority: true
+      status: unknown
+      notes: Candidata para manufatura, melhoria continua, manutencao e engenharia.
+
+  technology_data:
+    - name: Vivo
+      slug: vivo
+      base_url: https://vivo.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para tecnologia, dados, automacao e operacoes.
+    - name: iFood
+      slug: ifood
+      base_url: https://ifood.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para dados, plataformas e tecnologia.
+    - name: Stone
+      slug: stone
+      base_url: https://stone.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para tecnologia, dados e produtos digitais.
+    - name: PicPay
+      slug: picpay
+      base_url: https://picpay.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para dados, tecnologia e produtos digitais.
+    - name: Compass UOL
+      slug: compassuol
+      base_url: https://compassuol.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para tecnologia, cloud, dados e consultoria.
+
+  energy_infrastructure:
+    - name: Localiza
+      slug: localiza
+      base_url: https://localiza.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para operacoes, dados, manutencao e mobilidade.
+
+  consulting_engineering:
+    - name: Stefanini
+      slug: stefanini
+      base_url: https://stefanini.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para consultoria, tecnologia e automacao de processos.
+
+  logistics_mobility:
+    - name: Grupo Boticario
+      slug: grupoboticario
+      base_url: https://grupoboticario.gupy.io
+      priority: false
+      status: unknown
+      notes: Candidata para operacoes, supply, tecnologia e processos.

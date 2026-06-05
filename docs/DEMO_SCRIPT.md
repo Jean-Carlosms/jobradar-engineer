@@ -20,7 +20,10 @@ No dashboard, selecione `Dados ficticios`.
 5. Va para `Analise Vaga x Perfil`: mostre fit score, competencias encontradas, lacunas e mensagem sugerida.
 6. Va para `Revisao Humana`: explique status, favorita e observacoes para calibrar o perfil.
 7. Va para `Insights de Feedback`: mostre como revisoes humanas viram sinais para ajustes manuais.
-8. Feche com seguranca e compliance: sem login, sem candidatura automatica, sem bypass de captcha e sem dados sensiveis versionados.
+8. Mostre `Historico de Execucoes`: execucoes anteriores, duracao, erros e e-mails.
+9. Mostre `Alertas Operacionais`: falhas, zero vagas e alertas gerados a partir de `runs/*.json`.
+10. Mostre `Backups e Banco`: backups, comandos de manutencao e `Saude do Banco`.
+11. Feche com seguranca e compliance: sem login, sem candidatura automatica, sem bypass de captcha e sem dados sensiveis versionados.
 
 ## Roteiro com screenshots
 
@@ -37,6 +40,8 @@ Todos os screenshots publicos devem usar `Dados ficticios`.
 ## Frase curta de fechamento
 
 O JobRadar Engineer transforma coleta publica de vagas em um fluxo local auditavel: coleta, pre-filtra, pontua, analisa, permite revisao humana e gera sinais para calibragem sem alterar configuracoes automaticamente.
+
+Na versao v3.0.0, a demo tambem mostra operacao local completa: historico de execucoes, alertas operacionais, backups, schema versionado e saude do banco.
 
 ## Cuidados durante a demo
 

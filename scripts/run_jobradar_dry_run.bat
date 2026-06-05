@@ -13,6 +13,7 @@ set "LOG_FILE=%ROOT%\logs\jobradar_dry_run_%TS%.log"
 
 echo [%DATE% %TIME%] Starting JobRadar dry-run > "%LOG_FILE%"
 echo Root: %ROOT% >> "%LOG_FILE%"
+echo Auto backup before run is controlled by AUTO_BACKUP_BEFORE_RUN in .env >> "%LOG_FILE%"
 
 if exist "%ROOT%\.venv\Scripts\activate.bat" (
     echo Activating virtual environment >> "%LOG_FILE%"
@@ -21,7 +22,7 @@ if exist "%ROOT%\.venv\Scripts\activate.bat" (
     echo Virtual environment not found. Using system Python. >> "%LOG_FILE%"
 )
 
-python -m src.main --source mock --analyze --dry-run --min-score 50 --analysis-min-score 50 >> "%LOG_FILE%" 2>&1
+python -m src.main --source mock --analyze --dry-run --min-score 50 --analysis-min-score 50 --run-report >> "%LOG_FILE%" 2>&1
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo [%DATE% %TIME%] Finished with exit code %EXIT_CODE% >> "%LOG_FILE%"

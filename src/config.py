@@ -84,6 +84,18 @@ class Settings:
     email_from: str = field(default_factory=lambda: os.getenv("EMAIL_FROM", "jobradar@example.com"))
     email_to: str = field(default_factory=lambda: os.getenv("EMAIL_TO", "you@example.com"))
 
+    operational_alerts_enabled: bool = field(default_factory=lambda: _bool_env("OPERATIONAL_ALERTS_ENABLED", False))
+    operational_alerts_on_failure: bool = field(default_factory=lambda: _bool_env("OPERATIONAL_ALERTS_ON_FAILURE", True))
+    operational_alerts_on_no_jobs: bool = field(default_factory=lambda: _bool_env("OPERATIONAL_ALERTS_ON_NO_JOBS", True))
+    operational_alerts_on_no_email_eligible: bool = field(
+        default_factory=lambda: _bool_env("OPERATIONAL_ALERTS_ON_NO_EMAIL_ELIGIBLE", False)
+    )
+    operational_daily_summary: bool = field(default_factory=lambda: _bool_env("OPERATIONAL_DAILY_SUMMARY", False))
+
+    auto_backup_before_run: bool = field(default_factory=lambda: _bool_env("AUTO_BACKUP_BEFORE_RUN", False))
+    backup_retention_days: int = field(default_factory=lambda: int(os.getenv("BACKUP_RETENTION_DAYS", "30")))
+    backup_cleanup_dry_run: bool = field(default_factory=lambda: _bool_env("BACKUP_CLEANUP_DRY_RUN", True))
+
     scheduler_hour: int = field(default_factory=lambda: int(os.getenv("SCHEDULER_HOUR", "8")))
     scheduler_minute: int = field(default_factory=lambda: int(os.getenv("SCHEDULER_MINUTE", "0")))
 

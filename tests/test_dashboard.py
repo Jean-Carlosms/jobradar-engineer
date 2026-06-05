@@ -1,12 +1,16 @@
 import sqlite3
+from contextlib import closing
 
 import pandas as pd
 
 from dashboard import (
     calculate_funnel_metrics,
     calculate_metrics,
+    database_health_index_rows,
     display_column_name,
     filter_jobs,
+    filter_operational_alert_rows,
+    filter_run_history_rows,
     load_jobs,
     normalize_jobs_dataframe,
     standardize_display_columns,
@@ -134,9 +138,80 @@ def test_calculate_funnel_metrics_for_dashboard_dataframe():
     assert funnel["favorite_jobs"] == 1
 
 
+def test_filter_run_history_rows_applies_dashboard_filters():
+    rows = [
+        {
+            "run_id": "ok",
+            "source": "mock",
+            "mode": "dry-run",
+            "email_sent": True,
+            "errors_count": 0,
+        },
+        {
+            "run_id": "error",
+            "source": "gupy",
+            "mode": "production",
+            "email_sent": False,
+            "errors_count": 1,
+        },
+    ]
+
+    filtered = filter_run_history_rows(
+        rows,
+        source="gupy",
+        mode="production",
+        email_sent="Nao enviado",
+        error_status="Com erro",
+    )
+
+    assert len(filtered) == 1
+    assert filtered[0]["run_id"] == "error"
+
+
+def test_filter_operational_alert_rows_applies_dashboard_filters():
+    rows = [
+        {
+            "operational_alert_type": "failure",
+            "operational_alert_sent": True,
+            "source": "gupy",
+            "mode": "production",
+        },
+        {
+            "operational_alert_type": "no_email_eligible",
+            "operational_alert_sent": False,
+            "source": "mock",
+            "mode": "dry-run",
+        },
+    ]
+
+    filtered = filter_operational_alert_rows(
+        rows,
+        alert_type="no_email_eligible",
+        sent_status="Nao enviado",
+        source="mock",
+        mode="dry-run",
+    )
+
+    assert len(filtered) == 1
+    assert filtered[0]["operational_alert_type"] == "no_email_eligible"
+
+
+def test_database_health_index_rows_formats_columns_for_dashboard():
+    health = {
+        "indexes": [
+            {"name": "idx_jobs_match_score", "table": "jobs", "columns": ["match_score"]},
+            {"name": "idx_jobs_company", "table": "jobs", "columns": ["company"]},
+        ]
+    }
+
+    rows = database_health_index_rows(health, limit=1)
+
+    assert rows == [{"index": "idx_jobs_match_score", "table": "jobs", "columns": "match_score"}]
+
+
 def test_load_jobs_reads_sqlite_database(tmp_path):
     db_path = tmp_path / "jobs.db"
-    with sqlite3.connect(db_path) as connection:
+    with closing(sqlite3.connect(db_path)) as connection:
         connection.execute(
             """
             CREATE TABLE jobs (
@@ -186,6 +261,7 @@ def test_load_jobs_reads_sqlite_database(tmp_path):
                 0,
             ),
         )
+        connection.commit()
 
     dataframe = load_jobs(db_path)
 

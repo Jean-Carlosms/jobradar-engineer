@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import sqlite3
 import json
 import os
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -11,10 +12,14 @@ import streamlit as st
 
 from src.config import Settings
 from src.database import JobRepository
+from src.services.database_health import DatabaseHealthService
+from src.services.database_maintenance import BACKUP_MANIFEST_COLUMNS, DatabaseMaintenanceService
 from src.services.feedback_insights import FeedbackInsightsService
 from src.services.job_review_service import REVIEW_STATUSES, JobReviewService
+from src.services.run_history import OPERATIONAL_ALERT_COLUMNS, RUN_HISTORY_COLUMNS, RunHistoryService
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_DB_PATH = Path("data/jobs.db")
 SAMPLE_DB_PATH = Path("data/sample_jobs.db")
 PREFILTER_DEBUG_DIR = Path("logs/gupy_debug")
@@ -122,7 +127,7 @@ def load_jobs(db_path: str | Path = DEFAULT_DB_PATH) -> pd.DataFrame:
         return empty_jobs_dataframe()
 
     try:
-        with sqlite3.connect(path) as connection:
+        with closing(sqlite3.connect(path)) as connection:
             if not _table_exists(connection, JOBS_TABLE):
                 return empty_jobs_dataframe()
             dataframe = pd.read_sql_query(_jobs_query(connection), connection)
@@ -308,6 +313,50 @@ def to_display_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     return display
 
 
+def filter_run_history_rows(
+    rows: list[dict[str, Any]],
+    source: str = "Todas",
+    mode: str = "Todos",
+    email_sent: str = "Todos",
+    error_status: str = "Todos",
+) -> list[dict[str, Any]]:
+    filtered = list(rows)
+    if source != "Todas":
+        filtered = [row for row in filtered if row.get("source") == source]
+    if mode != "Todos":
+        filtered = [row for row in filtered if row.get("mode") == mode]
+    if email_sent == "Enviado":
+        filtered = [row for row in filtered if bool(row.get("email_sent"))]
+    elif email_sent == "Nao enviado":
+        filtered = [row for row in filtered if not bool(row.get("email_sent"))]
+    if error_status == "Com erro":
+        filtered = [row for row in filtered if int(row.get("errors_count") or 0) > 0]
+    elif error_status == "Sem erro":
+        filtered = [row for row in filtered if int(row.get("errors_count") or 0) == 0]
+    return filtered
+
+
+def filter_operational_alert_rows(
+    rows: list[dict[str, Any]],
+    alert_type: str = "Todos",
+    sent_status: str = "Todos",
+    source: str = "Todas",
+    mode: str = "Todos",
+) -> list[dict[str, Any]]:
+    filtered = list(rows)
+    if alert_type != "Todos":
+        filtered = [row for row in filtered if row.get("operational_alert_type") == alert_type]
+    if sent_status == "Enviado":
+        filtered = [row for row in filtered if bool(row.get("operational_alert_sent"))]
+    elif sent_status == "Nao enviado":
+        filtered = [row for row in filtered if not bool(row.get("operational_alert_sent"))]
+    if source != "Todas":
+        filtered = [row for row in filtered if row.get("source") == source]
+    if mode != "Todos":
+        filtered = [row for row in filtered if row.get("mode") == mode]
+    return filtered
+
+
 def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
     cursor = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
@@ -431,6 +480,9 @@ def run_dashboard() -> None:
             "Revisão Humana",
             "Auditoria do Pré-filtro",
             "Insights de Feedback",
+            "Histórico de Execuções",
+            "Alertas Operacionais",
+            "Backups e Banco",
             "Exportações",
         ]
     )
@@ -450,6 +502,12 @@ def run_dashboard() -> None:
     with tabs[6]:
         render_feedback_insights_section(db_path)
     with tabs[7]:
+        render_run_history_section()
+    with tabs[8]:
+        render_operational_alerts_section()
+    with tabs[9]:
+        render_backups_database_section()
+    with tabs[10]:
         render_exports_section(filtered)
 
 
@@ -549,6 +607,288 @@ def render_exports_section(dataframe: pd.DataFrame) -> None:
         "`python -m src.main --feedback-insights` e "
         "`python -m src.main --audit-prefilter-only --audit-input logs/gupy_debug/prefilter_YYYYMMDD_HHMMSS.csv`."
     )
+
+
+def render_run_history_section(project_root: str | Path = PROJECT_ROOT) -> None:
+    st.subheader("Historico de Execucoes")
+    st.caption("Leitura local dos JSONs em runs/ para acompanhar operacao, erros e e-mails.")
+    service = RunHistoryService(project_root)
+    entries = service.load()
+    summary = service.summary(entries)
+    rows = service.rows(entries)
+
+    metric_columns = st.columns(7)
+    metric_columns[0].metric("Execucoes", summary["total_runs"])
+    metric_columns[1].metric("Vagas unicas", summary["total_unique_jobs"])
+    metric_columns[2].metric("Elegiveis", summary["total_email_eligible"])
+    metric_columns[3].metric("E-mails enviados", summary["total_emails_sent"])
+    metric_columns[4].metric("Com erro", summary["runs_with_errors"])
+    metric_columns[5].metric("Duracao media", f"{summary['average_duration_seconds']:.1f}s")
+    metric_columns[6].metric("Fonte mais usada", summary["most_used_source"] or "n/a")
+
+    if not rows:
+        st.info("Nenhum historico encontrado. Rode `python -m src.main --source mock --dry-run --run-report`.")
+        return
+
+    filter_columns = st.columns(4)
+    source = filter_columns[0].selectbox("Fonte", _history_options(rows, "source"), key="run_history_source")
+    mode = filter_columns[1].selectbox("Modo", _history_options(rows, "mode"), key="run_history_mode")
+    email_sent = filter_columns[2].selectbox(
+        "E-mail",
+        ["Todos", "Enviado", "Nao enviado"],
+        key="run_history_email",
+    )
+    error_status = filter_columns[3].selectbox(
+        "Erros",
+        ["Todos", "Com erro", "Sem erro"],
+        key="run_history_errors",
+    )
+
+    filtered_rows = filter_run_history_rows(
+        rows,
+        source=source,
+        mode=mode,
+        email_sent=email_sent,
+        error_status=error_status,
+    )
+    history_dataframe = pd.DataFrame(filtered_rows, columns=RUN_HISTORY_COLUMNS)
+    st.download_button(
+        "Exportar historico CSV",
+        data=history_dataframe.to_csv(index=False).encode("utf-8-sig"),
+        file_name="jobradar_historico_execucoes.csv",
+        mime="text/csv",
+    )
+    st.dataframe(history_dataframe, use_container_width=True, hide_index=True)
+
+    if not filtered_rows:
+        st.info("Nenhuma execucao atende aos filtros selecionados.")
+        return
+
+    entry_by_run_id = {entry.run_id: entry for entry in entries}
+    selected_run = st.selectbox(
+        "Detalhar execucao",
+        [row["run_id"] for row in filtered_rows],
+        key="run_history_detail",
+    )
+    selected_entry = entry_by_run_id.get(selected_run)
+    if selected_entry is None:
+        return
+
+    st.write(f"Markdown: `{selected_entry.report_path}`")
+    detail_columns = st.columns(2)
+    with detail_columns[0]:
+        st.write("Fontes executadas")
+        st.dataframe(
+            _counter_dataframe(
+                [
+                    (name, selected_entry.jobs_collected_by_source.get(name, 0))
+                    for name in selected_entry.sources_executed
+                ]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+    with detail_columns[1]:
+        st.write("Erros por fonte")
+        if selected_entry.source_errors:
+            st.dataframe(
+                pd.DataFrame(
+                    [
+                        {"fonte": source_name, "erro": error}
+                        for source_name, error in selected_entry.source_errors.items()
+                    ]
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("Sem erros registrados.")
+
+    st.write("Relatorios/debug gerados")
+    if selected_entry.generated_reports:
+        st.dataframe(
+            pd.DataFrame({"path": selected_entry.generated_reports}),
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.info("Nenhum relatorio auxiliar registrado.")
+
+
+def render_operational_alerts_section(project_root: str | Path = PROJECT_ROOT) -> None:
+    st.subheader("Alertas Operacionais")
+    st.caption("Alertas registrados nos JSONs de runs/, separados do e-mail de vagas.")
+    service = RunHistoryService(project_root)
+    entries = service.load()
+    summary = service.summary(entries)
+    rows = service.alert_rows(entries)
+
+    metric_columns = st.columns(6)
+    metric_columns[0].metric("Alertas", summary["total_alerts"])
+    metric_columns[1].metric("Enviados", summary["operational_alerts_sent"])
+    metric_columns[2].metric("Nao enviados", summary["total_alerts"] - summary["operational_alerts_sent"])
+    metric_columns[3].metric("Falhas", summary["alert_failures"])
+    metric_columns[4].metric("Sem vagas", summary["alert_no_jobs"])
+    metric_columns[5].metric("Sem elegiveis", summary["alert_no_email_eligible"])
+
+    if not rows:
+        st.info("Nenhum alerta operacional registrado em runs/.")
+        return
+
+    filter_columns = st.columns(4)
+    alert_type = filter_columns[0].selectbox(
+        "Tipo",
+        _alert_options(rows, "operational_alert_type"),
+        key="operational_alert_type",
+    )
+    sent_status = filter_columns[1].selectbox(
+        "Envio",
+        ["Todos", "Enviado", "Nao enviado"],
+        key="operational_alert_sent",
+    )
+    source = filter_columns[2].selectbox(
+        "Fonte",
+        _history_options(rows, "source"),
+        key="operational_alert_source",
+    )
+    mode = filter_columns[3].selectbox(
+        "Modo",
+        _history_options(rows, "mode"),
+        key="operational_alert_mode",
+    )
+
+    filtered_rows = filter_operational_alert_rows(
+        rows,
+        alert_type=alert_type,
+        sent_status=sent_status,
+        source=source,
+        mode=mode,
+    )
+    alerts_dataframe = pd.DataFrame(filtered_rows, columns=OPERATIONAL_ALERT_COLUMNS)
+    st.download_button(
+        "Exportar alertas CSV",
+        data=alerts_dataframe.to_csv(index=False).encode("utf-8-sig"),
+        file_name="jobradar_alertas_operacionais.csv",
+        mime="text/csv",
+    )
+    st.dataframe(alerts_dataframe, use_container_width=True, hide_index=True)
+
+    if not filtered_rows:
+        st.info("Nenhum alerta atende aos filtros selecionados.")
+
+
+def render_backups_database_section(project_root: str | Path = PROJECT_ROOT) -> None:
+    st.subheader("Backups e Banco")
+    st.caption("Manifestos locais em backups/. Restauracao continua disponivel apenas via CLI.")
+    service = DatabaseMaintenanceService(project_root)
+    rows = service.backup_rows()
+    summary = service.backup_summary()
+    settings = Settings(project_root=Path(project_root))
+    cleanup_plan = service.plan_backup_cleanup(settings.backup_retention_days)
+
+    metric_columns = st.columns(5)
+    metric_columns[0].metric("Backups", summary["total_backups"])
+    metric_columns[1].metric("Tamanho total", summary["total_size"])
+    metric_columns[2].metric("Mais recente", summary["latest_backup"] or "n/a")
+    metric_columns[3].metric("Maior backup", summary["largest_backup_size"])
+    metric_columns[4].metric("Acima da retencao", cleanup_plan["candidates_count"])
+
+    st.info(
+        "Politica atual: "
+        f"reter {settings.backup_retention_days} dia(s); "
+        f"dry-run padrao={'sim' if settings.backup_cleanup_dry_run else 'nao'}. "
+        "Exclusao real somente via CLI com confirmacao."
+    )
+
+    if not rows:
+        st.info("Nenhum manifesto de backup encontrado em backups/.")
+    else:
+        dataframe = pd.DataFrame(rows)
+        display_columns = [column for column in BACKUP_MANIFEST_COLUMNS if column in dataframe.columns]
+        st.download_button(
+            "Exportar backups CSV",
+            data=dataframe[display_columns].to_csv(index=False).encode("utf-8-sig"),
+            file_name="jobradar_backups.csv",
+            mime="text/csv",
+        )
+        st.dataframe(dataframe[display_columns], use_container_width=True, hide_index=True)
+
+    st.write("Comandos recomendados")
+    st.code(
+        "\n".join(
+            [
+                'python -m src.main --backup-db --backup-reason "manual"',
+                "python -m src.main --list-db-backups",
+                "python -m src.main --verify-db-backup backups\\jobs_backup_YYYYMMDD_HHMMSS.json",
+                "python -m src.main --cleanup-db-backups-dry-run",
+                "python -m src.main --cleanup-db-backups --confirm-cleanup-backups",
+                "python -m src.main --export-db-summary",
+                "python -m src.main --db-maintenance",
+            ]
+        ),
+        language="bat",
+    )
+    st.info("Restauracao nao esta disponivel no dashboard. Use a CLI com `--confirm-restore`.")
+    st.divider()
+    render_database_health_section(project_root)
+
+
+def render_database_health_section(project_root: str | Path = PROJECT_ROOT) -> None:
+    st.subheader("Saude do Banco")
+    settings = Settings(project_root=Path(project_root))
+    health = DatabaseHealthService(project_root, settings.resolved_database_path).collect()
+
+    metric_columns = st.columns(6)
+    metric_columns[0].metric("Tamanho", health["file_size"])
+    metric_columns[1].metric("Integridade", health["integrity_check"])
+    metric_columns[2].metric("Schema", health["schema_status"])
+    metric_columns[3].metric("Versao", health["schema_current_version"])
+    metric_columns[4].metric("Indices", health["index_count"])
+    metric_columns[5].metric("Freelist", health["freelist_count"])
+
+    row_columns = st.columns(2)
+    with row_columns[0]:
+        st.write("Tabelas principais")
+        table_rows = [{"table": table, "rows": rows} for table, rows in health["table_rows"].items()]
+        if table_rows:
+            st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
+        else:
+            st.info("Nenhuma tabela principal encontrada.")
+    with row_columns[1]:
+        st.write("Indices principais")
+        index_rows = database_health_index_rows(health, limit=12)
+        if index_rows:
+            st.dataframe(pd.DataFrame(index_rows), use_container_width=True, hide_index=True)
+        else:
+            st.info("Nenhum indice encontrado.")
+
+    st.write("Comandos de diagnostico")
+    st.code(
+        "\n".join(
+            [
+                "python -m src.main --schema-status",
+                "python -m src.main --db-health",
+                "python -m src.main --export-db-health",
+                'python -m src.main --backup-db --backup-reason "before schema migration"',
+                "python -m src.main --migrate-schema",
+            ]
+        ),
+        language="bat",
+    )
+    st.info("Operacoes de migracao, manutencao e restore continuam restritas a CLI.")
+
+
+def database_health_index_rows(health: dict[str, Any], limit: int = 12) -> list[dict[str, str]]:
+    rows = []
+    for index in (health.get("indexes") or [])[:limit]:
+        rows.append(
+            {
+                "index": str(index.get("name") or ""),
+                "table": str(index.get("table") or ""),
+                "columns": ", ".join(index.get("columns") or []),
+            }
+        )
+    return rows
 
 
 def select_database_path() -> Path:
@@ -783,6 +1123,16 @@ def _counter_dataframe(items: list[tuple[str, int]]) -> pd.DataFrame:
     if not items:
         return pd.DataFrame([{"item": "nenhum dado", "total": 0}])
     return pd.DataFrame([{"item": item, "total": count} for item, count in items])
+
+
+def _history_options(rows: list[dict[str, Any]], column: str) -> list[str]:
+    values = sorted({str(row.get(column) or "") for row in rows if str(row.get(column) or "").strip()})
+    return ["Todas"] + values
+
+
+def _alert_options(rows: list[dict[str, Any]], column: str) -> list[str]:
+    values = sorted({str(row.get(column) or "") for row in rows if str(row.get(column) or "").strip()})
+    return ["Todos"] + values
 
 
 def _review_status_label(status: str) -> str:

@@ -18,11 +18,13 @@ def test_phase6_documentation_files_exist():
     expected_files = [
         ROOT / "docs" / "SCREENSHOTS_GUIDE.md",
         ROOT / "docs" / "DEMO_SCRIPT.md",
+        ROOT / "docs" / "COVERAGE_REVIEW.md",
         ROOT / "PORTFOLIO_SUMMARY.md",
         ROOT / "RELEASE_NOTES.md",
         ROOT / "SECURITY.md",
         ROOT / "LICENSE",
         ROOT / "reports" / ".gitkeep",
+        ROOT / "backups" / ".gitkeep",
         ROOT / "docs" / "images" / ".gitkeep",
     ]
 
@@ -75,6 +77,10 @@ def test_gitignore_keeps_sensitive_files_out_and_allows_sample_db():
     assert "logs/" in gitignore
     assert "reports/*" in gitignore
     assert "!reports/.gitkeep" in gitignore
+    assert "runs/*" in gitignore
+    assert "!runs/.gitkeep" in gitignore
+    assert "backups/*" in gitignore
+    assert "!backups/.gitkeep" in gitignore
     assert "data/jobs.db" in gitignore
     assert "!data/sample_jobs.db" in gitignore
     assert "!data/.gitkeep" in gitignore
@@ -131,3 +137,15 @@ def test_screenshot_placeholders_exist_and_describe_safe_capture():
         assert "Dados ficticios" in content
         assert f"docs/images/{image_name}" in content
         assert "Aba do dashboard" in content
+
+
+def test_coverage_review_documents_experimental_sources():
+    coverage_review = (ROOT / "docs" / "COVERAGE_REVIEW.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "SearchEngineSource" in coverage_review
+    assert "fallback experimental" in coverage_review
+    assert "scheduler.py" in coverage_review
+    assert "GlassdoorSource" in coverage_review
+    assert "GupyPublicSource" in coverage_review
+    assert "fallback experimental" in readme

@@ -66,6 +66,40 @@ class EmailSender:
         logger.info("E-mail enviado para %s com %s vaga(s).", self.settings.email_to, len(selected_jobs))
         return True
 
+    def build_operational_message(self, subject: str, body_text: str) -> EmailMessage:
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = self.settings.email_from
+        message["To"] = self.settings.email_to
+        message.set_content(body_text)
+        return message
+
+    def send_operational_alert(self, subject: str, body_text: str) -> bool:
+        message = self.build_operational_message(subject, body_text)
+
+        if self.settings.email_dry_run:
+            logger.info("EMAIL_DRY_RUN ativo. Alerta operacional gerado, mas nao enviado:\n%s", message.get_content())
+            return True
+        if not self._has_smtp_credentials():
+            logger.error(
+                "Credenciais SMTP ausentes. Configure SMTP_USERNAME e SMTP_PASSWORD antes de enviar alerta operacional."
+            )
+            return False
+
+        try:
+            with self._open_smtp_connection() as smtp:
+                if self.settings.smtp_use_tls and not self.settings.smtp_use_ssl:
+                    smtp.starttls()
+                if self.settings.smtp_username:
+                    smtp.login(self.settings.smtp_username, self.settings.smtp_password)
+                smtp.send_message(message)
+        except (OSError, smtplib.SMTPException, ssl.SSLError):
+            logger.exception("Falha ao enviar alerta operacional.")
+            return False
+
+        logger.info("Alerta operacional enviado para %s.", self.settings.email_to)
+        return True
+
     def _has_smtp_credentials(self) -> bool:
         return bool(self.settings.smtp_username and self.settings.smtp_password)
 

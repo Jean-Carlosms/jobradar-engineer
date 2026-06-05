@@ -11,7 +11,14 @@ EXPECTED_GITIGNORE_PATTERNS = [
     "logs/",
     "reports/*",
     "!reports/.gitkeep",
+    "runs/*",
+    "!runs/.gitkeep",
+    "backups/*",
+    "!backups/.gitkeep",
     "data/jobs.db",
+    "htmlcov/",
+    ".coverage",
+    "coverage.xml",
 ]
 
 REQUIRED_FILES = [
@@ -23,6 +30,8 @@ REQUIRED_FILES = [
     "PORTFOLIO_SUMMARY.md",
     "RELEASE_NOTES.md",
     "reports/.gitkeep",
+    "runs/.gitkeep",
+    "backups/.gitkeep",
 ]
 
 LOCAL_SENSITIVE_PATHS = [
@@ -30,6 +39,11 @@ LOCAL_SENSITIVE_PATHS = [
     "data/jobs.db",
     "logs",
     "reports",
+    "runs",
+    "backups",
+    "htmlcov",
+    ".coverage",
+    "coverage.xml",
     ".venv",
 ]
 

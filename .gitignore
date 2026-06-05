@@ -3,8 +3,15 @@
 logs/
 reports/*
 !reports/.gitkeep
+runs/*
+!runs/.gitkeep
+backups/*
+!backups/.gitkeep
 __pycache__/
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 *.pyc
 data/jobs.db
 data/*.db

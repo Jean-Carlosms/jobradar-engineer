@@ -1,3 +1,5 @@
+import smtplib
+
 from src.config import Settings
 from src.models.job import Job, JobAnalysis
 from src.services.email_sender import EmailSender
@@ -28,6 +30,11 @@ class DummySMTP:
 
     def send_message(self, message):
         self.sent = True
+
+
+class FailingSMTP(DummySMTP):
+    def send_message(self, message):
+        raise smtplib.SMTPException("falha simulada")
 
 
 def make_job(title: str, score: float, already_sent: bool = False) -> Job:
@@ -142,3 +149,36 @@ def test_email_sender_requires_credentials_for_real_send(monkeypatch, tmp_path):
 
     assert EmailSender(settings).send_jobs([make_job("Alta", 90)], min_score=50, limit=10) is False
     assert DummySMTP.instances == []
+
+
+def test_email_sender_returns_false_when_smtp_send_fails(monkeypatch, tmp_path):
+    DummySMTP.instances = []
+    monkeypatch.setattr("smtplib.SMTP", FailingSMTP)
+    settings = Settings(
+        database_path=tmp_path / "jobs.db",
+        email_dry_run=False,
+        smtp_username="user",
+        smtp_password="pass",
+    )
+
+    assert EmailSender(settings).send_jobs([make_job("Alta", 90)], min_score=50, limit=10) is False
+
+
+def test_email_sender_sends_operational_alert_with_smtp(monkeypatch, tmp_path):
+    DummySMTP.instances = []
+    monkeypatch.setattr("smtplib.SMTP", DummySMTP)
+    settings = Settings(
+        database_path=tmp_path / "jobs.db",
+        email_dry_run=False,
+        smtp_username="user",
+        smtp_password="pass",
+        smtp_use_tls=True,
+        smtp_use_ssl=False,
+    )
+
+    assert EmailSender(settings).send_operational_alert("Alerta", "Corpo operacional") is True
+
+    smtp = DummySMTP.instances[0]
+    assert smtp.started_tls is True
+    assert smtp.logged_in == ("user", "pass")
+    assert smtp.sent is True

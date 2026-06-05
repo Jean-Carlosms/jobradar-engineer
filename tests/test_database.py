@@ -69,3 +69,19 @@ def test_save_jobs_updates_existing_metadata_by_url(tmp_path):
     assert saved[0].title == "Titulo novo"
     assert saved[0].company == "Empresa nova"
     assert saved[0].location == "Sorocaba - SP"
+
+
+def test_repository_close_disposes_engine(tmp_path, monkeypatch):
+    settings = Settings(database_path=tmp_path / "jobs.db")
+    repository = JobRepository(settings)
+    disposed = False
+
+    def fake_dispose() -> None:
+        nonlocal disposed
+        disposed = True
+
+    monkeypatch.setattr(repository.engine, "dispose", fake_dispose)
+
+    repository.close()
+
+    assert disposed is True

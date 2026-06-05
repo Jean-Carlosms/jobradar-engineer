@@ -25,6 +25,8 @@ SMTP_USE_TLS=true
 SMTP_USE_SSL=false
 EMAIL_FROM=
 EMAIL_TO=
+AUTO_BACKUP_BEFORE_RUN=false
+BACKUP_RETENTION_DAYS=30
 ```
 
 Nao coloque credenciais reais em `.env.example`, README, TODO ou scripts.
@@ -95,10 +97,126 @@ SMTP_USE_SSL=true
 1. Rode `scripts\run_jobradar_dry_run.bat`.
 2. Verifique o log em `logs/`.
 3. Confira score minimo e analises.
-4. Configure SMTP no `.env`.
-5. Rode manualmente `scripts\run_jobradar_daily.bat`.
-6. Confirme o recebimento do e-mail.
-7. So entao configure o Agendador de Tarefas.
+4. Teste o alerta operacional com `python -m src.main --test-operational-alert --dry-run`.
+5. Crie um backup manual com `python -m src.main --backup-db --backup-reason "antes do agendamento"`.
+6. Configure SMTP no `.env`.
+7. Rode manualmente `scripts\run_jobradar_daily.bat`.
+8. Confirme o recebimento do e-mail.
+9. So entao configure o Agendador de Tarefas.
+
+## Backup do banco local
+
+Antes de agendar execucoes diarias, crie um backup de `data/jobs.db`:
+
+```bat
+python -m src.main --backup-db --backup-reason "antes do agendamento diario"
+python -m src.main --list-db-backups
+```
+
+Para habilitar backup automatico antes de cada execucao:
+
+```text
+AUTO_BACKUP_BEFORE_RUN=true
+BACKUP_RETENTION_DAYS=30
+```
+
+`BACKUP_RETENTION_DAYS` fica documentado para politica futura; esta fase nao apaga backups automaticamente. Backups reais ficam em `backups/` e nao devem ser versionados.
+
+Restaurar exige confirmacao explicita e cria backup automatico do estado atual antes de sobrescrever `data/jobs.db`:
+
+```bat
+python -m src.main --restore-db-backup backups\jobs_backup_YYYYMMDD_HHMMSS.json --confirm-restore
+```
+
+Use `--verify-db-backup` antes de restaurar:
+
+```bat
+python -m src.main --verify-db-backup backups\jobs_backup_YYYYMMDD_HHMMSS.json
+```
+
+Rotina recomendada:
+
+- Antes do agendamento diario: habilite `AUTO_BACKUP_BEFORE_RUN=true`.
+- Semanalmente: rode `python -m src.main --db-backup-summary`.
+- Periodicamente: verifique um backup recente com `python -m src.main --verify-db-backup backups\jobs_backup_YYYYMMDD_HHMMSS.json`.
+- Mensalmente: rode `python -m src.main --export-db-summary` e `python -m src.main --db-maintenance`.
+- Antes e depois da manutencao: rode `python -m src.main --db-health`.
+- Para auditoria: rode `python -m src.main --export-db-health`.
+- Mensalmente: simule limpeza com `python -m src.main --cleanup-db-backups-dry-run`.
+- Depois de revisar o relatorio, execute `python -m src.main --cleanup-db-backups --confirm-cleanup-backups` se quiser remover candidatos.
+- No dashboard: use a aba `Backups e Banco` para visualizar manifestos e tamanhos, sem restaurar pelo painel.
+
+## Migracao de schema
+
+O projeto usa `schema_migrations` para controlar a versao local do schema SQLite, sem Alembic nesta fase. Antes de qualquer migracao manual em banco real, crie backup:
+
+```bat
+python -m src.main --backup-db --backup-reason "before schema migration"
+python -m src.main --migrate-schema
+python -m src.main --schema-status
+```
+
+Use `--schema-status` tambem depois de atualizar o projeto para confirmar se o banco esta na versao esperada.
+
+## Saude do banco
+
+Use os comandos de saude para acompanhar tamanho, integridade, versao de schema, tabelas, linhas, indices e freelist:
+
+```bat
+python -m src.main --db-health
+python -m src.main --export-db-health
+```
+
+Rotina sugerida:
+
+1. Rode `python -m src.main --db-health` antes de `--db-maintenance`.
+2. Rode `python -m src.main --db-maintenance`.
+3. Rode `python -m src.main --db-health` novamente.
+4. Exporte evidencia com `python -m src.main --export-db-health`.
+
+## Alertas operacionais
+
+Alertas operacionais sao e-mails separados do e-mail de vagas. Eles usam o relatorio da execucao em `runs/` como base e ajudam a perceber falhas de fonte, execucoes sem vagas ou execucoes sem vagas elegiveis para envio.
+
+Variaveis:
+
+```text
+OPERATIONAL_ALERTS_ENABLED=false
+OPERATIONAL_ALERTS_ON_FAILURE=true
+OPERATIONAL_ALERTS_ON_NO_JOBS=true
+OPERATIONAL_ALERTS_ON_NO_EMAIL_ELIGIBLE=false
+OPERATIONAL_DAILY_SUMMARY=false
+```
+
+Tipos:
+
+- `failure`: fontes com erro.
+- `no_jobs`: nenhuma vaga unica coletada.
+- `no_email_eligible`: houve coleta, mas nada ficou elegivel para e-mail.
+- `success_summary`: resumo opcional de uma execucao bem-sucedida.
+
+Teste sem envio real:
+
+```bat
+python -m src.main --test-operational-alert --dry-run
+python -m src.main --source mock --dry-run --run-report --send-operational-alerts
+```
+
+Ativar em producao:
+
+1. Valide o SMTP com dry-run primeiro.
+2. Configure `OPERATIONAL_ALERTS_ENABLED=true`.
+3. Mantenha `OPERATIONAL_ALERTS_ON_FAILURE=true`.
+4. Mantenha `OPERATIONAL_ALERTS_ON_NO_JOBS=true` se quiser aviso quando as fontes nao retornarem vagas.
+5. Ative `OPERATIONAL_ALERTS_ON_NO_EMAIL_ELIGIBLE=true` apenas se esse volume de alerta fizer sentido.
+6. Use `OPERATIONAL_DAILY_SUMMARY=true` somente se quiser resumo mesmo quando tudo funcionar.
+7. Rode com `--run-report`, pois o alerta registra status no relatorio da execucao.
+
+Para desativar em uma execucao especifica:
+
+```bat
+python -m src.main --source all --dry-run --run-report --no-operational-alerts
+```
 
 ## Evitar spam
 

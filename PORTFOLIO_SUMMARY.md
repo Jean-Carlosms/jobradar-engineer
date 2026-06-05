@@ -2,7 +2,7 @@
 
 ## Nome do projeto
 
-JobRadar Engineer v1.4.0.
+JobRadar Engineer v3.0.0.
 
 ## Problema resolvido
 
@@ -12,9 +12,11 @@ Buscar vagas aderentes a um perfil tecnico de engenharia consome tempo, exige co
 
 Um robo local em Python que coleta vagas publicas, calcula aderencia ao perfil, remove duplicatas, salva em SQLite, analisa vaga x perfil, envia relatorios por e-mail, permite revisao humana e apresenta tudo em um dashboard Streamlit.
 
-## Status v1.4.0
+## Status v3.0.0
 
-Projeto completo para portfolio e publicacao segura, agora com CI real, qualidade automatizada, calibracao assistida por feedback humano, dashboard polido e estrutura visual preparada para screenshots publicos. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
+Metricas finais da release: `198 testes`, cobertura local em torno de `91%`, limite minimo de cobertura `85%` no CI, schema SQLite versionado e banco local validado com `16 indices`.
+
+Projeto completo para portfolio e publicacao segura, agora com CI real, cobertura de testes, qualidade automatizada, testes offline determinísticos, observabilidade local, alertas operacionais por e-mail, dashboard de alertas operacionais, dashboard de backups, retencao segura de backups, backup e manutencao do SQLite, historico operacional, calibracao assistida por feedback humano, dashboard polido e estrutura visual preparada para screenshots publicos. O fluxo local cobre configuracao do perfil, coleta, ranking, auditoria, revisao humana, insights, relatorios de execucao, backup, visualizacao, operacao no Windows e validacao continua no GitHub Actions.
 
 ## Pipeline final
 
@@ -28,7 +30,11 @@ Projeto completo para portfolio e publicacao segura, agora com CI real, qualidad
 8. Gera analise vaga x perfil com `fit_score`.
 9. Envia e-mail em dry-run ou SMTP configurado.
 10. Exibe dashboard Streamlit com filtros, graficos, auditoria e revisao humana.
-11. Exporta auditorias e feedbacks para `reports/`.
+11. Registra relatorios de execucao e historico operacional.
+12. Gera alertas operacionais para falhas, zero vagas e execucoes sem elegiveis.
+13. Mantem backups, retencao segura e manutencao do SQLite local.
+14. Controla schema versionado, indices de performance e saude do banco.
+15. Exporta auditorias, feedbacks, resumo do banco e health reports para `reports/`.
 
 ## Principais funcionalidades
 
@@ -40,7 +46,17 @@ Projeto completo para portfolio e publicacao segura, agora com CI real, qualidad
 - Score explicavel por palavras-chave.
 - Analise vaga x perfil baseada em regras locais.
 - E-mail com melhores vagas e sugestao de mensagem ao recrutador.
-- Dashboard com filtros, graficos, exportacao CSV, auditoria e revisao humana.
+- Alertas operacionais separados para falhas e resumos de execucao.
+- Backup, restore protegido, resumo agregado e manutencao do SQLite local.
+- Retencao de backups com dry-run, confirmacao explicita e relatorios de limpeza.
+- Schema SQLite versionado com migracoes locais idempotentes.
+- Indices de performance e diagnostico de saude do banco por CLI, dashboard e relatorios.
+- Cobertura de testes medida localmente com pytest-cov e integrada ao CI.
+- Politica de cobertura minima de 85% aplicada no CI.
+- Cobertura reforcada em modulos criticos como CLI operacional, backup, alertas e envio de e-mail.
+- Revisao arquitetural de modulos experimentais e fontes fallback documentada.
+- Gerenciamento seguro de conexoes SQLite para reduzir `ResourceWarning` na suite.
+- Dashboard com filtros, graficos, exportacao CSV, auditoria, revisao humana, historico, alertas operacionais e backups.
 - Feedback manual com status, favoritos e notas.
 - Insights assistivos para calibrar o perfil sem alterar YAML automaticamente.
 - Scripts Windows para dry-run, producao e dashboard.
@@ -68,7 +84,7 @@ Python, SQLAlchemy, SQLite, Requests, BeautifulSoup, PyYAML, Pandas, Streamlit, 
 
 ## Resultados alcancados
 
-- Versao v1.4.0 executavel com testes automatizados, CI no GitHub Actions, insights de feedback e README visual.
+- Versao v3.0.0 executavel com 198 testes automatizados offline, cobertura local em torno de 91%, schema SQLite versionado, 16 indices de performance, saude do banco, limite minimo de 85% no CI, revisao arquitetural de modulos experimentais, warnings SQLite limpos, insights de feedback, relatorios de execucao, alertas operacionais, backups do SQLite, retencao segura, historico operacional no dashboard, dashboard de alertas, dashboard de backups e README visual.
 - Dashboard local para tomada de decisao.
 - Fluxo de e-mail e agendamento Windows.
 - Projeto preparado para GitHub sem dados sensiveis.
@@ -106,11 +122,11 @@ Enquanto os PNGs finais nao forem capturados, os arquivos `.placeholder.txt` em 
 
 ## Proximos passos
 
-- Gerar sugestoes semi-automaticas de ajuste do YAML com base no feedback humano.
-- Melhorar fontes oficiais via APIs publicas.
-- Adicionar exportacao Excel.
-- Adicionar pagina detalhada por vaga.
-- Configurar CI real no GitHub Actions.
+- Avaliar Alembic caso o schema cresca alem das migracoes locais simples.
+- Integrar APIs oficiais de busca de forma opcional.
+- Subir cobertura minima para 90% depois de cobrir os modulos restantes.
+- Avaliar criptografia opcional de backups.
+- Criar deploy/demo opcional e melhorias visuais finais.
 
 ## Como explicar em entrevista
 

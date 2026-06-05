@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,9 +23,10 @@ def main() -> int:
     if SAMPLE_DB.exists():
         SAMPLE_DB.unlink()
 
-    with sqlite3.connect(SAMPLE_DB) as connection:
+    with closing(sqlite3.connect(SAMPLE_DB)) as connection:
         create_schema(connection)
         insert_rows(connection, rows)
+        connection.commit()
 
     print(f"Sample database created: {SAMPLE_DB}")
     print(f"Rows inserted: {len(rows)}")

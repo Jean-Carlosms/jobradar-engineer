@@ -43,5 +43,5 @@ jobs:
       - name: Publication safety check
         run: python scripts/check_publication_safety.py
 
-      - name: Test
-        run: python -m pytest
+      - name: Test with coverage
+        run: python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=85

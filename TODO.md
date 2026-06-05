@@ -287,7 +287,269 @@
 - [ ] Aplicar sugestoes manualmente em `profile_keywords.yaml` e comparar resultados.
 - [ ] Melhorar schema/migracoes do SQLite.
 
-### Fase 19 - API de busca opcional e sugestoes de slugs
+### Fase 19 - Testes determinísticos, anti-rede e estabilidade operacional
+
+- [x] Criar `pytest.ini` com `testpaths`, markers e `--strict-markers`.
+- [x] Adicionar markers `unit`, `integration`, `network` e `slow`.
+- [x] Criar `tests/conftest.py`.
+- [x] Bloquear `requests.sessions.Session.request` por padrao durante `pytest`.
+- [x] Permitir rede apenas com `@pytest.mark.network`.
+- [x] Criar mensagem clara para tentativa de rede real em teste.
+- [x] Revisar testes de Gupy, busca publica e dashboard para manter mocks/fixtures locais.
+- [x] Criar `tests/helpers.py` para mensagem compartilhada do bloqueio.
+- [x] Adicionar teste garantindo que rede real e bloqueada.
+- [x] Adicionar teste garantindo que marcador `network` libera o bloqueio sem chamada real.
+- [x] Atualizar README com testes offline e diferenca entre teste e execucao real.
+- [x] Atualizar `docs/PUBLISHING_CHECKLIST.md`.
+- [x] Atualizar `RELEASE_NOTES.md` com `v1.5.0 - Testes determinísticos e bloqueio de rede`.
+
+### Roadmap pos-v1.5
+
+- [ ] Adicionar CI com coverage.
+- [ ] Revisar cache de dependencias no GitHub Actions.
+- [ ] Criar testes de integracao opcionais marcados como `network`.
+- [ ] Avaliar deploy/demo opcional.
+- [ ] Avaliar SerpAPI, Bing Search API ou Google Custom Search API.
+- [ ] Gerar sugestoes automaticas de slugs Gupy a partir de empresas-alvo.
+- [ ] Criar comando de diagnostico apenas para empresas Gupy.
+
+### Fase 20 - Observabilidade local e relatório de execução
+
+- [x] Criar `src/services/run_reporter.py`.
+- [x] Coletar `run_id`, horarios, duracao, modo, source, fontes, totais, status de e-mail e erros.
+- [x] Gerar relatorio Markdown em `runs/run_report_YYYYMMDD_HHMMSS.md`.
+- [x] Gerar relatorio JSON em `runs/run_report_YYYYMMDD_HHMMSS.json`.
+- [x] Proteger `runs/` no `.gitignore` mantendo `runs/.gitkeep`.
+- [x] Integrar `--run-report` em `src/main.py`.
+- [x] Integrar `--no-run-report` em `src/main.py`.
+- [x] Adicionar `--latest-run-report`.
+- [x] Atualizar scripts Windows para usar `--run-report`.
+- [x] Adicionar testes de Markdown, JSON, `.gitignore`, CLI e sanitizacao.
+- [x] Atualizar README, checklist, release notes e TODO.
+
+### Fase 21 - Dashboard de execucoes e historico operacional
+
+- [x] Criar `src/services/run_history.py`.
+- [x] Localizar e carregar JSONs validos em `runs/run_report_*.json`.
+- [x] Ignorar JSONs invalidos com fallback seguro.
+- [x] Ordenar execucoes da mais recente para a mais antiga.
+- [x] Normalizar linhas para dashboard com metricas principais.
+- [x] Calcular resumo de execucoes, vagas, e-mails, erros, duracao media e fonte mais usada.
+- [x] Criar aba `Historico de Execucoes` no dashboard.
+- [x] Adicionar filtros por fonte, modo, e-mail enviado e erro.
+- [x] Exibir detalhes da execucao selecionada.
+- [x] Adicionar exportacao CSV do historico no dashboard.
+- [x] Adicionar CLI `--run-history-summary`.
+- [x] Adicionar testes de servico, resumo, CLI e helper do dashboard.
+- [x] Atualizar README, checklist, release notes e TODO.
+
+### Fase 22 - Alertas de falha e resumo operacional por e-mail
+
+- [x] Criar `src/services/operational_alerts.py`.
+- [x] Gerar `subject`, `body_text` e `should_send` a partir do run report.
+- [x] Criar tipos `failure`, `no_jobs`, `no_email_eligible` e `success_summary`.
+- [x] Adicionar configuracoes `OPERATIONAL_ALERTS_*` e `OPERATIONAL_DAILY_SUMMARY`.
+- [x] Reutilizar SMTP existente em fluxo separado do e-mail de vagas.
+- [x] Respeitar dry-run para nao enviar e-mail real.
+- [x] Integrar alertas ao final da execucao com `--run-report`.
+- [x] Registrar status do alerta operacional no run report.
+- [x] Adicionar CLI `--send-operational-alerts` e `--no-operational-alerts`.
+- [x] Adicionar CLI `--test-operational-alert`.
+- [x] Adicionar testes de tipos de alerta, configuracao, dry-run, CLI e run report.
+- [x] Atualizar README, guia de producao, release notes e TODO.
+
+### Fase 23 - Dashboard de alertas operacionais
+
+- [x] Extrair `operational_alert_type` dos JSONs de `runs/`.
+- [x] Extrair `operational_alert_should_send`, `operational_alert_sent` e `operational_alert_reason`.
+- [x] Calcular total de alertas, enviados, por tipo, execucoes sem alerta e ultimo alerta.
+- [x] Calcular totais de `failure`, `no_jobs`, `no_email_eligible` e `success_summary`.
+- [x] Criar aba `Alertas Operacionais` no dashboard.
+- [x] Exibir metricas principais de alertas.
+- [x] Exibir tabela filtravel com alertas operacionais.
+- [x] Adicionar filtros por tipo, envio, fonte e modo.
+- [x] Adicionar exportacao CSV dos alertas filtrados.
+- [x] Atualizar `--run-history-summary` com dados de alertas.
+- [x] Adicionar CLI `--operational-alerts-summary`.
+- [x] Adicionar testes de servico, CLI e helper do dashboard.
+- [x] Atualizar README, checklist, release notes e TODO.
+
+### Fase 24 - Backup, restauracao e manutencao do banco local
+
+- [x] Criar pasta `backups/` com `backups/.gitkeep`.
+- [x] Proteger `backups/` no `.gitignore`.
+- [x] Criar `src/services/database_maintenance.py`.
+- [x] Criar backup de `data/jobs.db` em `backups/jobs_backup_YYYYMMDD_HHMMSS.db`.
+- [x] Criar manifesto JSON com timestamp, origem, destino, tamanho, SHA-256 e motivo.
+- [x] Listar backups disponiveis.
+- [x] Verificar integridade de backup com SHA-256 e `PRAGMA integrity_check`.
+- [x] Restaurar backup apenas com confirmacao explicita.
+- [x] Criar backup automatico do estado atual antes de restaurar.
+- [x] Exportar resumo agregado do banco em CSV/JSON.
+- [x] Executar `VACUUM` e `ANALYZE` com checagem de integridade.
+- [x] Adicionar CLI `--backup-db`, `--backup-reason`, `--list-db-backups`, `--verify-db-backup`, `--restore-db-backup`, `--confirm-restore`, `--db-maintenance` e `--export-db-summary`.
+- [x] Adicionar `AUTO_BACKUP_BEFORE_RUN` e `BACKUP_RETENTION_DAYS`.
+- [x] Integrar backup automatico antes da coleta principal quando configurado.
+- [x] Registrar backup automatico no run report quando houver `--run-report`.
+- [x] Atualizar README, guia de producao, checklist, release notes e TODO.
+- [x] Adicionar testes de backup, restore, exportacao, manutencao e protecao Git.
+
+### Fase 25 - Dashboard de backups e manutencao do banco
+
+- [x] Criar aba `Backups e Banco` no dashboard.
+- [x] Listar manifestos validos em `backups/*.json`.
+- [x] Ignorar manifestos invalidos de forma segura.
+- [x] Mostrar timestamp, motivo, caminho, tamanho, SHA curto e status de verificacao.
+- [x] Mostrar metricas de total, tamanho total, backup mais recente e maior backup.
+- [x] Exportar lista de backups para CSV.
+- [x] Mostrar comandos recomendados de backup, verificacao, resumo e manutencao.
+- [x] Manter restauracao fora do dashboard nesta fase.
+- [x] Expor helpers `load_backup_manifest_rows`, `summarize_backups`, `format_backup_size` e `short_sha256`.
+- [x] Adicionar CLI `--db-backup-summary`.
+- [x] Atualizar README, guia de producao, checklist, release notes e TODO.
+- [x] Adicionar testes de manifestos, resumo, helper, CLI e colunas do dashboard.
+
+### Fase 26 - Retencao automatica de backups e limpeza segura
+
+- [x] Criar plano de retencao para `backups/jobs_backup_*.json`.
+- [x] Parear manifesto com arquivo `.db`.
+- [x] Calcular idade do backup.
+- [x] Identificar backups acima de `BACKUP_RETENTION_DAYS`.
+- [x] Nunca remover o backup mais recente.
+- [x] Proteger manifestos invalidos por padrao.
+- [x] Gerar plano com encontrados, candidatos, protegidos, motivos e espaco recuperavel.
+- [x] Adicionar CLI `--cleanup-db-backups`.
+- [x] Adicionar CLI `--cleanup-db-backups-dry-run`.
+- [x] Adicionar CLI `--confirm-cleanup-backups`.
+- [x] Gerar relatorios `reports/backup_cleanup_YYYYMMDD_HHMMSS.md` e `.csv`.
+- [x] Adicionar `BACKUP_CLEANUP_DRY_RUN`.
+- [x] Atualizar dashboard com politica de retencao e candidatos.
+- [x] Atualizar README, guia de producao, checklist, release notes e TODO.
+- [x] Adicionar testes de plano, dry-run, confirmacao, manifestos invalidos e relatorios.
+
+### Fase 27 - Cobertura de testes e badge de cobertura
+
+- [x] Adicionar `pytest-cov` em `requirements-dev.txt`.
+- [x] Documentar comando `python -m pytest --cov=src --cov-report=term-missing --cov-report=html`.
+- [x] Garantir relatorio HTML em `htmlcov/`.
+- [x] Ignorar `htmlcov/`, `.coverage` e `coverage.xml`.
+- [x] Atualizar GitHub Actions para rodar coverage no CI.
+- [x] Manter Ruff e safety check no CI.
+- [x] Atualizar README com secao `Cobertura de testes`.
+- [x] Adicionar badge estatico de cobertura medida localmente.
+- [x] Atualizar checklist, release notes e TODO.
+- [x] Adicionar testes documentais para dependencia, ignores e README.
+
+### Fase 28 - Gerenciamento seguro de SQLite e limpeza de warnings
+
+- [x] Rodar `python -W default -m pytest` para identificar `ResourceWarning`.
+- [x] Rastrear conexoes SQLite nao fechadas com `PYTHONTRACEMALLOC`.
+- [x] Ajustar `JobRepository` para evitar conexoes retidas em pool.
+- [x] Adicionar `close()` e context manager ao repositorio.
+- [x] Corrigir conexoes diretas no dashboard com `contextlib.closing`.
+- [x] Corrigir script de dados ficticios para fechar conexao e commitar explicitamente.
+- [x] Corrigir teste de dashboard que criava SQLite temporario.
+- [x] Rodar `python -W default -m pytest` sem warnings relevantes.
+- [x] Atualizar README, release notes, checklist, portfolio e TODO.
+
+### Fase 29 - Limite minimo de cobertura no CI
+
+- [x] Manter `python -m pytest` simples fora do coverage global.
+- [x] Atualizar GitHub Actions com limite minimo inicial de cobertura.
+- [x] Atualizar README com cobertura minima atual de 80%.
+- [x] Documentar cobertura local em torno de 86%.
+- [x] Atualizar checklist com comando de coverage e limite minimo.
+- [x] Atualizar release notes, portfolio e TODO.
+- [x] Adicionar testes documentais para CI, README e checklist.
+
+### Fase 30 - Melhoria de cobertura dos modulos criticos
+
+- [x] Rodar coverage com o limite vigente para identificar lacunas.
+- [x] Priorizar `src/main.py` como modulo critico com maior gap.
+- [x] Adicionar testes para relatorio de execucao ausente.
+- [x] Adicionar testes para auditoria de pre-filtro sem CSV.
+- [x] Adicionar testes para backup automatico antes da execucao.
+- [x] Adicionar testes para wrappers de backup, verificacao, manutencao, exportacao e limpeza.
+- [x] Adicionar testes para alertas operacionais desativados e falha de envio.
+- [x] Adicionar testes para falha SMTP e alerta operacional no `EmailSender`.
+- [x] Atualizar README, release notes, portfolio e TODO.
+
+### Fase 31 - Limite minimo de cobertura elevado para 85%
+
+- [x] Atualizar GitHub Actions para `--cov-fail-under=85`.
+- [x] Atualizar README com cobertura minima atual de 85%.
+- [x] Manter cobertura local aproximada em torno de 88%.
+- [x] Atualizar checklist de publicacao com o novo limite.
+- [x] Atualizar release notes, portfolio e TODO.
+- [x] Atualizar testes documentais para validar o novo limite ativo.
+- [x] Garantir que o limite antigo nao aparece em documentacao operacional.
+
+### Fase 32 - Revisao de modulos de baixa cobertura e decisao arquitetural
+
+- [x] Rodar coverage com `--cov-fail-under=85`.
+- [x] Classificar modulos de baixa cobertura por importancia e papel.
+- [x] Criar `docs/COVERAGE_REVIEW.md`.
+- [x] Documentar `SearchEngineSource` como fallback experimental.
+- [x] Confirmar testes de parser, challenge, fallback sem links e filtro de dominio.
+- [x] Adicionar testes uteis para busca desativada, challenge sem links e falha de request.
+- [x] Decidir manter `scheduler.py` como utilitario futuro com teste minimo.
+- [x] Decidir manter fontes placeholder como contratos futuros documentados.
+- [x] Adicionar docstrings e testes minimos para fontes placeholder.
+- [x] Atualizar README, release notes, portfolio e TODO.
+
+### Fase 33 - Schema versionado e migracoes controladas
+
+- [x] Criar `src/schema_migrations.py`.
+- [x] Criar tabela `schema_migrations`.
+- [x] Definir `CURRENT_SCHEMA_VERSION`.
+- [x] Implementar `get_applied_migrations`.
+- [x] Implementar `apply_schema_migrations`.
+- [x] Criar migracao inicial idempotente.
+- [x] Integrar migracoes ao `JobRepository.init_db`.
+- [x] Adicionar CLI `--schema-status`.
+- [x] Adicionar CLI `--migrate-schema`.
+- [x] Adicionar testes para banco novo, legado, idempotencia e CLI.
+- [x] Atualizar README, guia de producao, checklist, release notes, portfolio e TODO.
+
+### Fase 34 - Indices de performance e saude do banco
+
+- [x] Elevar `CURRENT_SCHEMA_VERSION` para 2.
+- [x] Adicionar migracao v2 para indices SQLite idempotentes.
+- [x] Criar indices em colunas relevantes de `jobs`, `job_analyses` e `schema_migrations`.
+- [x] Garantir que a migracao v2 nao falha com colunas opcionais ausentes.
+- [x] Criar `src/services/database_health.py`.
+- [x] Adicionar CLI `--db-health`.
+- [x] Adicionar CLI `--export-db-health`.
+- [x] Adicionar secao `Saude do Banco` no dashboard.
+- [x] Atualizar README, guia de producao, checklist, release notes, portfolio e TODO.
+- [x] Adicionar testes para indices, saude do banco, exportacao, CLI e dashboard helper.
+
+### Fase 35 - Release v3.0.0, revisao final e publicacao
+
+- [x] Revisar README com status v3.0.0, 198 testes, 91% coverage, limite 85%, schema versionado e saude do banco.
+- [x] Revisar `PORTFOLIO_SUMMARY.md` com pipeline final e metricas finais.
+- [x] Revisar `RELEASE_NOTES.md` sem duplicar versoes.
+- [x] Revisar `TODO.md` e consolidar ideias futuras no roadmap pos-v3.0.
+- [x] Revisar `docs/PUBLISHING_CHECKLIST.md` com comandos finais de validacao.
+- [x] Atualizar `docs/DEMO_SCRIPT.md` com historico, alertas, backups e saude do banco.
+- [x] Atualizar `docs/LINKEDIN_POST.md` para divulgacao v3.0.0.
+- [x] Atualizar `docs/INTERVIEW_PITCH.md` com arquitetura e operacao v3.0.0.
+- [x] Reforcar `scripts/check_publication_safety.py` para artefatos de coverage.
+- [x] Atualizar testes documentais da release final.
+
+### Roadmap pos-v3.0
+
+- [ ] Avaliar Alembic se o schema crescer.
+- [ ] Integrar APIs oficiais de busca de forma opcional.
+- [ ] Subir cobertura minima para 90%.
+- [ ] Avaliar criptografia opcional de backups.
+- [ ] Criar deploy/demo opcional.
+- [ ] Fazer melhorias visuais finais e capturar screenshots com dados ficticios.
+- [ ] Metricas de crescimento do banco.
+- [ ] Dashboard de performance historica.
+- [ ] Otimizacao das queries do dashboard.
+
+### Fase 36 - API de busca opcional e sugestoes de slugs
 
 - [ ] Avaliar SerpAPI, Bing Search API ou Google Custom Search API.
 - [ ] Gerar sugestoes automaticas de slugs Gupy a partir de empresas-alvo.
@@ -295,7 +557,7 @@
 - [ ] Marcar automaticamente status observado em relatorio separado.
 - [ ] Priorizar empresas com vagas tecnicas reais nos ultimos dias.
 
-### Fase 20 - Qualidade das fontes
+### Fase 37 - Qualidade das fontes
 
 - [ ] Adicionar clientes para APIs publicas oficiais quando disponiveis.
 - [ ] Melhorar coleta Gupy.
@@ -306,7 +568,7 @@
 - [ ] Adicionar cache de consultas.
 - [ ] Separar resultados de busca por fonte de forma mais precisa.
 
-### Fase 21 - Produto local
+### Fase 38 - Produto local
 
 - [ ] Adicionar pagina de detalhes da vaga no dashboard.
 - [ ] Exportacao Excel.
@@ -315,11 +577,11 @@
 - [ ] Editor local do perfil YAML pelo dashboard.
 - [ ] Adicionar screenshots reais sanitizados.
 
-### Fase 22 - Operacao
+### Fase 39 - Operacao
 
 - [ ] Logs rotativos em arquivo.
 - [ ] Alertas de falha por fonte.
 - [ ] Container Docker opcional.
 - [x] Pipeline de CI com pytest.
 - [x] Adicionar CI GitHub Actions.
-- [ ] Criar release v1.0.0.
+- [x] Criar release documental v3.0.0.

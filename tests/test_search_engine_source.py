@@ -1,4 +1,9 @@
 from src.config import Settings
+from src.sources.glassdoor_source import GlassdoorSource
+from src.sources.indeed_source import IndeedSource
+from src.sources.infojobs_source import InfoJobsSource
+from src.sources.linkedin_source import LinkedInSource
+import src.sources.search_engine_source as search_module
 from src.sources.search_engine_source import SearchEngineSource
 
 
@@ -101,3 +106,64 @@ def test_detects_duckduckgo_challenge_page(tmp_path):
     """
 
     assert source.detect_search_challenge(html) is True
+
+
+def test_search_fetch_returns_empty_when_web_search_disabled(tmp_path):
+    settings = Settings(project_root=tmp_path, enable_web_search=False)
+    source = SearchEngineSource(settings)
+
+    assert source.fetch(["Automation Engineer"], ["Campinas"]) == []
+
+
+def test_search_duckduckgo_returns_empty_for_challenge_without_links(monkeypatch, tmp_path):
+    class DummyResponse:
+        url = "https://html.duckduckgo.com/html/"
+        status_code = 200
+        text = "<html><body>captcha complete the following challenge</body></html>"
+
+        def raise_for_status(self):
+            return None
+
+    source = make_source(tmp_path)
+    monkeypatch.setattr(search_module.requests, "get", lambda *args, **kwargs: DummyResponse())
+
+    jobs = source._search_duckduckgo("site:gupy.io/jobs automacao", "Campinas")
+
+    assert jobs == []
+
+
+def test_search_fetch_continues_when_request_fails(monkeypatch, tmp_path):
+    settings = Settings(project_root=tmp_path, rate_limit_seconds=0, max_search_queries=1)
+    source = SearchEngineSource(settings)
+
+    def raise_request_error(*args, **kwargs):
+        raise search_module.requests.RequestException("falha simulada")
+
+    monkeypatch.setattr(search_module.requests, "get", raise_request_error)
+
+    assert source.fetch(["Automation Engineer"], ["Campinas"]) == []
+
+
+def test_placeholder_sources_are_experimental_search_wrappers(tmp_path):
+    settings = Settings(project_root=tmp_path, rate_limit_seconds=0)
+
+    sources = [
+        GlassdoorSource(settings),
+        IndeedSource(settings),
+        InfoJobsSource(settings),
+        LinkedInSource(settings),
+    ]
+
+    assert [source.name for source in sources] == [
+        "GlassdoorBuscaPublica",
+        "IndeedBuscaPublica",
+        "InfoJobsBuscaPublica",
+        "LinkedInBuscaPublica",
+    ]
+    assert [source.search_sites for source in sources] == [
+        ["glassdoor.com.br"],
+        ["br.indeed.com"],
+        ["infojobs.com.br"],
+        ["linkedin.com/jobs/view"],
+    ]
+    assert all("Experimental public-search fallback" in (source.__class__.__doc__ or "") for source in sources)

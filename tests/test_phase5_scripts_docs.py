@@ -33,6 +33,10 @@ def test_gitignore_excludes_sensitive_runtime_files():
     assert "logs/" in gitignore
     assert "reports/*" in gitignore
     assert "!reports/.gitkeep" in gitignore
+    assert "runs/*" in gitignore
+    assert "!runs/.gitkeep" in gitignore
+    assert "backups/*" in gitignore
+    assert "!backups/.gitkeep" in gitignore
     assert "data/jobs.db" in gitignore
 
 
@@ -43,5 +47,6 @@ def test_daily_script_uses_expected_production_command():
     assert "--source all" in script
     assert "--analyze" in script
     assert "--send-email" in script
+    assert "--run-report" in script
     assert "--analysis-min-score 50" in script
     assert "logs\\jobradar_daily_" in script

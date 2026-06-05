@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 
-from sqlalchemy import and_, create_engine, inspect, or_, select, text
+from sqlalchemy import and_, create_engine, or_, select
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from src.config import Settings
 from src.models.job import Base, Job, JobAnalysis, JobListing, utc_now
+from src.schema_migrations import apply_schema_migrations
 from src.services.job_profile_analyzer import JobProfileAnalysis
 
 
@@ -14,12 +16,22 @@ class JobRepository:
     def __init__(self, settings: Settings) -> None:
         db_path = settings.resolved_database_path
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.engine = create_engine(f"sqlite:///{db_path.as_posix()}", future=True)
+        self.db_path = db_path
+        self.engine = create_engine(f"sqlite:///{db_path.as_posix()}", future=True, poolclass=NullPool)
         self.session_factory = sessionmaker(bind=self.engine, expire_on_commit=False, future=True)
+
+    def close(self) -> None:
+        self.engine.dispose()
+
+    def __enter__(self) -> JobRepository:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        self.close()
 
     def init_db(self) -> None:
         Base.metadata.create_all(self.engine)
-        self._ensure_phase2_columns()
+        apply_schema_migrations(self.db_path)
 
     def save_jobs(self, listings: list[JobListing]) -> list[Job]:
         saved: list[Job] = []
@@ -143,29 +155,6 @@ class JobRepository:
         job.query_used = listing.query_used
         job.prefilter_score = listing.prefilter_score
         job.prefilter_reason = listing.prefilter_reason
-
-    def _ensure_phase2_columns(self) -> None:
-        inspector = inspect(self.engine)
-        existing_columns = {column["name"] for column in inspector.get_columns("jobs")}
-        migrations = {
-            "match_reason": "ALTER TABLE jobs ADD COLUMN match_reason TEXT NOT NULL DEFAULT ''",
-            "priority_company": "ALTER TABLE jobs ADD COLUMN priority_company BOOLEAN NOT NULL DEFAULT 0",
-            "query_used": "ALTER TABLE jobs ADD COLUMN query_used TEXT NOT NULL DEFAULT ''",
-            "prefilter_score": "ALTER TABLE jobs ADD COLUMN prefilter_score FLOAT NOT NULL DEFAULT 0",
-            "prefilter_reason": "ALTER TABLE jobs ADD COLUMN prefilter_reason TEXT NOT NULL DEFAULT ''",
-            "review_status": "ALTER TABLE jobs ADD COLUMN review_status VARCHAR(30) NOT NULL DEFAULT 'unreviewed'",
-            "review_notes": "ALTER TABLE jobs ADD COLUMN review_notes TEXT NOT NULL DEFAULT ''",
-            "is_favorite": "ALTER TABLE jobs ADD COLUMN is_favorite BOOLEAN NOT NULL DEFAULT 0",
-            "viewed_at": "ALTER TABLE jobs ADD COLUMN viewed_at DATETIME",
-            "reviewed_at": "ALTER TABLE jobs ADD COLUMN reviewed_at DATETIME",
-        }
-
-        with self.engine.begin() as connection:
-            for column_name, statement in migrations.items():
-                if column_name not in existing_columns:
-                    connection.execute(text(statement))
-            if "match_reasons" in existing_columns and "match_reason" not in existing_columns:
-                connection.execute(text("UPDATE jobs SET match_reason = match_reasons WHERE match_reason = ''"))
 
     def _update_analysis(self, target: JobAnalysis, analysis: JobProfileAnalysis) -> None:
         now = utc_now()
